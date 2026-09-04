@@ -105,6 +105,7 @@ function renderSearchResults(results) {
 
 async function renderDashboard() {
   const overview = state.overview || await window.samudraAPI.getOverview();
+  state.overview = overview;
   const scenarios = await window.samudraAPI.getScenarios();
 
   const scenarioCards = scenarios.map((scenario) => `
@@ -131,6 +132,10 @@ async function renderDashboard() {
         <div class="metric">${overview.totalCases || 0}</div>
       </div>
       <div class="card">
+        <h3>Legal Documents</h3>
+        <div class="metric">${overview.totalLegalDocuments || 0}</div>
+      </div>
+      <div class="card">
         <h3>Database</h3>
         <div class="metric">${overview.dbVersion || '1.0.0'}</div>
       </div>
@@ -149,6 +154,69 @@ async function renderDashboard() {
         renderScenarioDetail(scenario);
       }
     });
+  });
+}
+
+async function renderLawLibrary() {
+  const library = await window.samudraAPI.getLawLibrary();
+  const documents = library.documents || [];
+  const documentCards = documents.length
+    ? documents.map((doc) => `
+      <div class="document-item">
+        <h4>${doc.title}</h4>
+        <div class="muted">${doc.type} • ${doc.source_name || 'Local import'} • ${doc.status || 'DRAFT'}</div>
+        <p>${doc.summary || 'No summary available.'}</p>
+        <div class="tag">${doc.version || '1.0.0'}</div>
+      </div>
+    `).join('')
+    : '<p class="muted">No imported legal documents yet. Add a source document to begin building the legal knowledge base.</p>';
+
+  $('#view-container').innerHTML = `
+    <div class="list-box">
+      <h3>Legal Knowledge Library</h3>
+      <div class="document-import-panel">
+        <input id="doc-title" type="text" placeholder="Document title" />
+        <input id="doc-source" type="text" placeholder="Source / authority" />
+        <input id="doc-reference" type="text" placeholder="Reference / gazette / notice" />
+        <textarea id="doc-text" rows="6" placeholder="Paste the relevant legal text or extracted body here..."></textarea>
+        <div class="form-row">
+          <input id="doc-keywords" type="text" placeholder="Keywords" />
+          <input id="doc-status" type="text" value="DRAFT" placeholder="Status" />
+        </div>
+        <button id="import-document-btn" class="primary-btn small-btn">IMPORT DOCUMENT</button>
+      </div>
+    </div>
+    <div class="list-box">
+      <h3>Imported Documents</h3>
+      <div class="document-list">${documentCards}</div>
+    </div>
+  `;
+
+  $('#import-document-btn').addEventListener('click', async () => {
+    const payload = {
+      title: $('#doc-title').value.trim(),
+      source_name: $('#doc-source').value.trim(),
+      reference: $('#doc-reference').value.trim(),
+      keywords: $('#doc-keywords').value.trim(),
+      status: $('#doc-status').value.trim() || 'DRAFT',
+      type: 'ACT',
+      text: $('#doc-text').value.trim(),
+      summary: $('#doc-text').value.trim().slice(0, 300),
+      verification_authority: 'LOCAL REVIEW',
+      verification_date: new Date().toISOString().slice(0, 10),
+    };
+
+    if (!payload.title || !payload.text) {
+      $('#doc-text').focus();
+      return;
+    }
+
+    const result = await window.samudraAPI.importDocument(payload);
+    if (result.ok) {
+      await renderLawLibrary();
+      await renderDashboard();
+      state.overview = await window.samudraAPI.getOverview();
+    }
   });
 }
 
@@ -172,16 +240,67 @@ function renderScenarioDetail(scenario) {
   $('#view-container').innerHTML = html;
 }
 
-function renderView() {
+async async function renderView() {
   if (state.currentView === 'dashboard') {
     renderDashboard();
     return;
   }
 
+  if (state.currentView === 'law-library') {
+    await renderLawLibrary();
+    return;
+  }
+
+  if (state.currentView === 'situation') {
+    const defaultText = 'foreign fishing vessel without documentation';
+    const matches = await window.samudraAPI.resolveLegalBasis(defaultText, 6);
+    const resultMarkup = matches.length
+      ? matches.map((item) => `
+          <div class="result-item">
+            <strong>${item.title}</strong>
+            <div class="muted">${item.type} • ${item.source || 'Source unavailable'}</div>
+            <div>${item.summary || 'No summary available.'}</div>
+            <div class="tag">${item.status || 'VERIFY'}</div>
+            <div class="muted">${item.match || 'Match'}</div>
+          </div>
+        `).join('')
+      : '<p class="muted">NO VERIFIED LEGAL BASIS FOUND IN THE CURRENT DATABASE.</p>';
+
+    $('#view-container').innerHTML = `
+      <div class="list-box">
+        <h3>Situation Assistant</h3>
+        <div class="situation-panel">
+          <textarea id="situation-input" rows="4">${defaultText}</textarea>
+          <button id="resolve-legal-basis-btn" class="primary-btn small-btn">RESOLVE LEGAL BASIS</button>
+        </div>
+      </div>
+      <div class="list-box">
+        <h3>Relevant Law Matches</h3>
+        ${resultMarkup}
+      </div>
+    `;
+
+    $('#resolve-legal-basis-btn').addEventListener('click', async () => {
+      const text = $('#situation-input').value.trim();
+      const matches = await window.samudraAPI.resolveLegalBasis(text || defaultText, 6);
+      const output = matches.length
+        ? matches.map((item) => `
+            <div class="result-item">
+              <strong>${item.title}</strong>
+              <div class="muted">${item.type} • ${item.source || 'Source unavailable'}</div>
+              <div>${item.summary || 'No summary available.'}</div>
+              <div class="tag">${item.status || 'VERIFY'}</div>
+              <div class="muted">${item.match || 'Match'}</div>
+            </div>
+          `).join('')
+        : '<p class="muted">NO VERIFIED LEGAL BASIS FOUND IN THE CURRENT DATABASE.</p>';
+      $('#view-container').querySelectorAll('.list-box')[1].innerHTML = `<h3>Relevant Law Matches</h3>${output}`;
+    });
+    return;
+  }
+
   const modules = {
-    situation: '<div class="list-box"><h3>Situation Assistant</h3><p class="muted">Select a scenario from the dashboard or search for a scenario to review legal mapping.</p></div>',
     powers: '<div class="list-box"><h3>What Can I Do?</h3><p class="muted">STOP • BOARD • INSPECT • SEARCH • ARREST • SEIZE • HANDOVER</p><p class="status-conditional">CONDITIONAL — VERIFY ALL STATUTORY CONDITIONS BEFORE EXERCISE.</p></div>',
-    'law-library': '<div class="list-box"><h3>Law Library</h3><p class="muted">COAST GUARD • MARITIME ZONES • FISHERIES • CUSTOMS • NARCOTICS • IMMIGRATION • MARINE POLLUTION</p></div>',
     jurisdiction: '<div class="list-box"><h3>Jurisdiction</h3><p>SELECTED ZONE</p><p class="muted">Jurisdiction shown is a decision-support aid and must be independently confirmed where operational or legal consequences arise.</p></div>',
     boarding: '<div class="list-box"><h3>Boarding Assistant</h3><p class="muted">STEP 1 — VESSEL • STEP 2 — POSITION • STEP 3 — REASON • STEP 4 — PRE-BOARDING • STEP 5 — DOCUMENTS</p></div>',
     'search-seizure': '<div class="list-box"><h3>Search / Seizure</h3><p class="muted">DRAFT / SYSTEM-GENERATED — VERIFY AGAINST APPLICABLE LAW AND APPROVED FORMAT.</p></div>',

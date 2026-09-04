@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Electron builds
+dist/
+out/
+release/
+build/
+
+# Local application database
+app-data/*.db
+app-data/*.db-wal
+app-data/*.db-shm
+app-data/*.db-journal
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# VS Code local settings
+.vscode/

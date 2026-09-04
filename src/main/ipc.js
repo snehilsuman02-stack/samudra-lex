@@ -35,6 +35,22 @@ function registerIpc() {
     return database.getLawLibrary();
   });
 
+  ipcMain.handle('db:legal-documents', async () => {
+    return database.getLegalDocuments();
+  });
+
+  ipcMain.handle('db:legal-document', async (_event, id) => {
+    return database.getLegalDocumentById(id);
+  });
+
+  ipcMain.handle('db:resolve-legal-basis', async (_event, query, limit) => {
+    return database.resolveLegalBasis(query, limit);
+  });
+
+  ipcMain.handle('db:import-document', async (_event, payload) => {
+    return database.importLegalDocument(payload);
+  });
+
   ipcMain.handle('db:module-records', async (_event, moduleName) => {
     return database.getModuleRecords(moduleName);
   });

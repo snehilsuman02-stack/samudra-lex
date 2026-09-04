@@ -95,6 +95,16 @@ button { cursor: pointer; }
 .scenario-item h4 { margin: 0 0 10px; }
 .tag { display: inline-block; padding: 6px 8px; border-radius: 999px; background: rgba(87, 151, 219, 0.18); border: 1px solid rgba(87,151,219,0.5); color: #d6ebff; margin-right: 6px; }
 
+.document-import-panel { display: flex; flex-direction: column; gap: 12px; }
+.document-import-panel input, .document-import-panel textarea, .situation-panel textarea { width: 100%; background: var(--panel-alt); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 10px 12px; }
+.document-import-panel textarea, .situation-panel textarea { resize: vertical; min-height: 120px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.small-btn { width: auto; max-width: 240px; }
+.document-list { display: grid; gap: 12px; }
+.document-item { background: var(--panel-alt); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+.document-item h4 { margin: 0 0 8px; }
+.situation-panel { display: flex; flex-direction: column; gap: 12px; }
+
 .status-clear { color: var(--success); }
 .status-conditional { color: var(--warning); }
 .status-not-established { color: var(--danger); }

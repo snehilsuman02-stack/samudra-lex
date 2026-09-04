@@ -86,32 +86,79 @@ function search(query, type = 'ALL') {
 
   const dbRef = getDb();
   const likePattern = `%${safeQuery}%`;
+  const normalizedType = String(type || 'ALL').trim().toUpperCase();
   let sql = '';
   const params = [];
 
-  if (type === 'ALL') {
-    sql = `
-      SELECT title AS title, 'ACT' AS type, description AS description, source AS source, status AS status, version AS version FROM acts WHERE title LIKE ? OR description LIKE ? OR keywords LIKE ?
+  const addFreeTextMatch = (table, columns, extraColumns = []) => {
+    const columnList = [...columns, ...extraColumns];
+    const searchTerms = columnList.map(() => 'LIKE ?').join(' OR ');
+    return `SELECT title, ${JSON.stringify(table)} AS type, description, source, status, version FROM ${table} WHERE ${searchTerms}`;
+  };
+
+  const actSql = `SELECT title AS title, 'ACT' AS type, description AS description, source AS source, status AS status, version AS version FROM acts WHERE title LIKE ? OR description LIKE ? OR keywords LIKE ?`;
+  const sectionSql = `SELECT title AS title, 'SECTION' AS type, summary AS description, source AS source, status AS status, version AS version FROM sections WHERE title LIKE ? OR summary LIKE ? OR keywords LIKE ?`;
+  const powerSql = `SELECT title AS title, 'POWER' AS type, description AS description, source AS source, status AS status, version AS version FROM powers WHERE title LIKE ? OR description LIKE ? OR keywords LIKE ?`;
+  const scenarioSql = `SELECT title AS title, 'SCENARIO' AS type, situation AS description, 'DEMO DATABASE' AS source, status AS status, '1.0.0' AS version FROM scenarios WHERE title LIKE ? OR situation LIKE ?`;
+  const documentSql = `SELECT title AS title, 'LEGAL_DOCUMENT' AS type, summary AS description, source_name AS source, status AS status, version AS version FROM legal_documents WHERE title LIKE ? OR summary LIKE ? OR keywords LIKE ? OR full_text LIKE ?`;
+  const documentSectionSql = `SELECT title AS title, 'DOCUMENT_SECTION' AS type, summary AS description, source_reference AS source, status AS status, version AS version FROM document_sections WHERE title LIKE ? OR summary LIKE ? OR keywords LIKE ? OR full_text LIKE ?`;
+  const checklistSql = `SELECT title AS title, 'CHECKLIST' AS type, description AS description, source AS source, status AS status, version AS version FROM checklists WHERE title LIKE ? OR description LIKE ?`;
+  const formSql = `SELECT title AS title, 'FORM' AS type, description AS description, source AS source, status AS status, version AS version FROM forms WHERE title LIKE ? OR description LIKE ?`;
+
+  if (normalizedType === 'ALL') {
+    sql = `${actSql}
       UNION ALL
-      SELECT title, 'SECTION', summary, source, status, version FROM sections WHERE title LIKE ? OR summary LIKE ? OR keywords LIKE ?
+      ${sectionSql}
       UNION ALL
-      SELECT title, 'POWER', description, source, status, version FROM powers WHERE title LIKE ? OR description LIKE ? OR keywords LIKE ?
+      ${powerSql}
       UNION ALL
-      SELECT title AS title, 'SCENARIO' AS type, situation AS description, 'DEMO DATABASE' AS source, status AS status, '1.0.0' AS version FROM scenarios WHERE title LIKE ? OR situation LIKE ?
+      ${scenarioSql}
       UNION ALL
-      SELECT title, 'CHECKLIST', description, source, status, version FROM checklists WHERE title LIKE ? OR description LIKE ?
+      ${documentSql}
       UNION ALL
-      SELECT title, 'FORM', description, source, status, version FROM forms WHERE title LIKE ? OR description LIKE ?
-      LIMIT 50`;
+      ${documentSectionSql}
+      UNION ALL
+      ${checklistSql}
+      UNION ALL
+      ${formSql}
+      LIMIT 100`;
 
     params.push(
       likePattern, likePattern, likePattern,
       likePattern, likePattern, likePattern,
       likePattern, likePattern, likePattern,
       likePattern, likePattern,
+      likePattern, likePattern, likePattern, likePattern,
+      likePattern, likePattern, likePattern, likePattern,
       likePattern, likePattern,
       likePattern, likePattern
     );
+  } else if (normalizedType === 'ACTS') {
+    sql = actSql;
+    params.push(likePattern, likePattern, likePattern);
+  } else if (normalizedType === 'SECTIONS') {
+    sql = sectionSql;
+    params.push(likePattern, likePattern, likePattern);
+  } else if (normalizedType === 'POWERS') {
+    sql = powerSql;
+    params.push(likePattern, likePattern, likePattern);
+  } else if (normalizedType === 'SCENARIOS') {
+    sql = scenarioSql;
+    params.push(likePattern, likePattern);
+  } else if (normalizedType === 'DOCUMENTS' || normalizedType === 'LEGAL_DOCUMENTS') {
+    sql = documentSql;
+    params.push(likePattern, likePattern, likePattern, likePattern);
+  } else if (normalizedType === 'DOCUMENT_SECTIONS' || normalizedType === 'LEGAL_DOCUMENT_SECTIONS') {
+    sql = documentSectionSql;
+    params.push(likePattern, likePattern, likePattern, likePattern);
+  } else if (normalizedType === 'CHECKLISTS') {
+    sql = checklistSql;
+    params.push(likePattern, likePattern);
+  } else if (normalizedType === 'FORMS') {
+    sql = formSql;
+    params.push(likePattern, likePattern);
+  } else {
+    return search(safeQuery, 'ALL');
   }
 
   const rows = dbRef.prepare(sql).all(...params);
@@ -124,6 +171,7 @@ function getOverview() {
     totalActs: dbRef.prepare('SELECT COUNT(*) AS total FROM acts').get().total,
     totalScenarios: dbRef.prepare('SELECT COUNT(*) AS total FROM scenarios').get().total,
     totalCases: dbRef.prepare('SELECT COUNT(*) AS total FROM cases').get().total,
+    totalLegalDocuments: dbRef.prepare('SELECT COUNT(*) AS total FROM legal_documents').get().total,
     dbVersion: dbRef.prepare("SELECT key_value FROM settings WHERE key_name = 'db_version'").get()?.key_value || '1.0.0',
   };
 }
@@ -149,7 +197,22 @@ function getLawLibrary() {
   const dbRef = getDb();
   const acts = dbRef.prepare('SELECT * FROM acts ORDER BY id').all();
   const sections = dbRef.prepare('SELECT * FROM sections ORDER BY act_id, id').all();
-  return { acts, sections };
+  const documents = dbRef.prepare('SELECT * FROM legal_documents ORDER BY id DESC').all();
+  const docSections = dbRef.prepare('SELECT * FROM document_sections ORDER BY document_id, id').all();
+  return { acts, sections, documents, docSections };
+}
+
+function getLegalDocuments() {
+  const dbRef = getDb();
+  return dbRef.prepare('SELECT * FROM legal_documents ORDER BY id DESC').all();
+}
+
+function getLegalDocumentById(id) {
+  const dbRef = getDb();
+  const document = dbRef.prepare('SELECT * FROM legal_documents WHERE id = ?').get(id);
+  if (!document) return null;
+  const sections = dbRef.prepare('SELECT * FROM document_sections WHERE document_id = ? ORDER BY id').all(id);
+  return { ...document, sections };
 }
 
 function getModuleRecords(moduleName) {
@@ -161,10 +224,117 @@ function getModuleRecords(moduleName) {
     cases: 'SELECT * FROM cases ORDER BY id',
     checklists: 'SELECT * FROM checklists ORDER BY id',
     forms: 'SELECT * FROM forms ORDER BY id',
+    documents: 'SELECT * FROM legal_documents ORDER BY id DESC',
+    'document-sections': 'SELECT * FROM document_sections ORDER BY id',
   };
 
   const sql = map[moduleName] || 'SELECT 1';
   return dbRef.prepare(sql).all();
+}
+
+function resolveLegalBasis(searchText, limit = 6) {
+  const dbRef = getDb();
+  const query = String(searchText || '').trim();
+  if (!query) {
+    return [];
+  }
+
+  const likePattern = `%${query}%`;
+  const rowLimit = Number.isFinite(Number(limit)) ? Math.max(1, Number(limit)) : 6;
+
+  const results = [];
+
+  const actRows = dbRef.prepare(`SELECT title, description AS summary, source, status, version, 'ACT' AS type FROM acts WHERE title LIKE ? OR description LIKE ? OR keywords LIKE ? OR full_text LIKE ? LIMIT ?`).all(likePattern, likePattern, likePattern, likePattern, rowLimit);
+  actRows.forEach((row) => results.push({ ...row, match: 'Act match' }));
+
+  const sectionRows = dbRef.prepare(`SELECT title, summary, source, status, version, 'SECTION' AS type FROM sections WHERE title LIKE ? OR summary LIKE ? OR keywords LIKE ? OR full_text LIKE ? LIMIT ?`).all(likePattern, likePattern, likePattern, likePattern, rowLimit);
+  sectionRows.forEach((row) => results.push({ ...row, match: 'Section match' }));
+
+  const powerRows = dbRef.prepare(`SELECT title, description AS summary, source, status, version, 'POWER' AS type FROM powers WHERE title LIKE ? OR description LIKE ? OR keywords LIKE ? OR full_text LIKE ? LIMIT ?`).all(likePattern, likePattern, likePattern, likePattern, rowLimit);
+  powerRows.forEach((row) => results.push({ ...row, match: 'Power match' }));
+
+  const offenceRows = dbRef.prepare(`SELECT title, description AS summary, source, status, version, 'OFFENCE' AS type FROM offences WHERE title LIKE ? OR description LIKE ? OR keywords LIKE ? OR full_text LIKE ? LIMIT ?`).all(likePattern, likePattern, likePattern, likePattern, rowLimit);
+  offenceRows.forEach((row) => results.push({ ...row, match: 'Offence match' }));
+
+  const legalDocumentRows = dbRef.prepare(`SELECT title, summary, source_name AS source, status, version, 'LEGAL_DOCUMENT' AS type FROM legal_documents WHERE title LIKE ? OR summary LIKE ? OR keywords LIKE ? OR full_text LIKE ? LIMIT ?`).all(likePattern, likePattern, likePattern, likePattern, rowLimit);
+  legalDocumentRows.forEach((row) => results.push({ ...row, match: 'Document match' }));
+
+  return results.slice(0, rowLimit * 5);
+}
+
+function importLegalDocument(payload = {}) {
+  const dbRef = getDb();
+  const title = String(payload.title || '').trim();
+  const text = String(payload.text || payload.full_text || '').trim();
+  if (!title || !text) {
+    return { ok: false, message: 'Document title and text are required.' };
+  }
+
+  const type = String(payload.type || 'ACT').trim() || 'ACT';
+  const sourceName = String(payload.source_name || payload.sourceName || 'LOCAL IMPORT').trim();
+  const reference = String(payload.reference || '').trim();
+  const effectiveDate = String(payload.effective_date || payload.effectiveDate || '').trim();
+  const verificationDate = String(payload.verification_date || payload.verificationDate || new Date().toISOString().slice(0, 10)).trim();
+  const verificationAuthority = String(payload.verification_authority || payload.verificationAuthority || 'LOCAL OFFICER REVIEW').trim();
+  const version = String(payload.version || '1.0.0').trim();
+  const status = String(payload.status || 'DRAFT').trim();
+  const keywords = String(payload.keywords || '').trim();
+  const summary = String(payload.summary || text.slice(0, 300)).trim();
+
+  const insertDocument = dbRef.prepare(`INSERT INTO legal_documents (
+    title, type, source_name, reference, effective_date, verification_date, verification_authority, version, status, keywords, summary, full_text
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+  const result = insertDocument.run(
+    title,
+    type,
+    sourceName,
+    reference,
+    effectiveDate,
+    verificationDate,
+    verificationAuthority,
+    version,
+    status,
+    keywords,
+    summary,
+    text
+  );
+
+  const documentId = Number(result.lastInsertRowid);
+  const sections = text
+    .split(/\n{2,}|\n(?=(?:[A-Z][A-Za-z0-9\s\-]+:|\d+\.?\s|Chapter\s|Section\s))/)
+    .map((section) => section.trim())
+    .filter(Boolean);
+
+  if (sections.length > 0) {
+    const insertSection = dbRef.prepare(`INSERT INTO document_sections (
+      document_id, section_number, title, summary, full_text, keywords, source_reference, version, status
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+
+    sections.forEach((sectionText, index) => {
+      const headingMatch = sectionText.match(/^(?:Section\s+\d+[:.-]?\s*|Chapter\s+[A-Za-z0-9.-]+[:.-]?\s*|\d+[.)]\s*)?(.*)$/i);
+      const sectionTitle = (headingMatch && headingMatch[2] && headingMatch[2].trim()) || `Section ${index + 1}`;
+      const sectionSummary = sectionText.length > 200 ? `${sectionText.slice(0, 200)}...` : sectionText;
+      insertSection.run(
+        documentId,
+        `SEC-${index + 1}`,
+        sectionTitle,
+        sectionSummary,
+        sectionText,
+        keywords,
+        reference,
+        version,
+        status
+      );
+    });
+  }
+
+  dbRef.prepare('INSERT INTO legal_versions (entity_type, entity_id, version, change_summary, status) VALUES (?, ?, ?, ?, ?)')
+    .run('LEGAL_DOCUMENT', documentId, version, `Imported document: ${title}`, status);
+
+  dbRef.prepare('INSERT INTO audit_log (action, details) VALUES (?, ?)')
+    .run('LEGAL_DOCUMENT_IMPORTED', `Document ${title} imported and indexed.`);
+
+  return { ok: true, id: documentId, message: 'Legal document imported successfully.' };
 }
 
 function verifyLogin(username, password) {
@@ -283,6 +453,10 @@ module.exports = {
   getScenarios,
   getScenarioById,
   getLawLibrary,
+  getLegalDocuments,
+  getLegalDocumentById,
+  resolveLegalBasis,
+  importLegalDocument,
   getModuleRecords,
   verifyLogin,
   addCase,

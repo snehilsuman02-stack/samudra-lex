@@ -284,6 +284,37 @@ CREATE TABLE IF NOT EXISTS legal_sources (
   status TEXT DEFAULT 'DRAFT'
 );
 
+CREATE TABLE IF NOT EXISTS legal_documents (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  type TEXT DEFAULT 'ACT',
+  source_name TEXT,
+  reference TEXT,
+  effective_date TEXT,
+  verification_date TEXT,
+  verification_authority TEXT,
+  version TEXT DEFAULT '1.0.0',
+  status TEXT DEFAULT 'DRAFT',
+  keywords TEXT,
+  summary TEXT,
+  full_text TEXT,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS document_sections (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  document_id INTEGER,
+  section_number TEXT,
+  title TEXT,
+  summary TEXT,
+  full_text TEXT,
+  keywords TEXT,
+  source_reference TEXT,
+  version TEXT DEFAULT '1.0.0',
+  status TEXT DEFAULT 'DRAFT',
+  FOREIGN KEY(document_id) REFERENCES legal_documents(id)
+);
+
 CREATE TABLE IF NOT EXISTS legal_versions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   entity_type TEXT,
@@ -293,6 +324,48 @@ CREATE TABLE IF NOT EXISTS legal_versions (
   status TEXT,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE VIRTUAL TABLE IF NOT EXISTS legal_documents_fts USING fts5(
+  title, type, source_name, reference, summary, full_text, keywords, content='legal_documents', content_rowid='id'
+);
+
+CREATE VIRTUAL TABLE IF NOT EXISTS document_sections_fts USING fts5(
+  title, summary, full_text, keywords, content='document_sections', content_rowid='id'
+);
+
+CREATE TRIGGER IF NOT EXISTS legal_documents_ai AFTER INSERT ON legal_documents BEGIN
+  INSERT INTO legal_documents_fts(rowid, title, type, source_name, reference, summary, full_text, keywords)
+  VALUES (new.id, new.title, new.type, new.source_name, new.reference, new.summary, new.full_text, new.keywords);
+END;
+
+CREATE TRIGGER IF NOT EXISTS legal_documents_ad AFTER DELETE ON legal_documents BEGIN
+  INSERT INTO legal_documents_fts(legal_documents_fts, rowid, title, type, source_name, reference, summary, full_text, keywords)
+  VALUES('delete', old.id, old.title, old.type, old.source_name, old.reference, old.summary, old.full_text, old.keywords);
+END;
+
+CREATE TRIGGER IF NOT EXISTS legal_documents_au AFTER UPDATE ON legal_documents BEGIN
+  INSERT INTO legal_documents_fts(legal_documents_fts, rowid, title, type, source_name, reference, summary, full_text, keywords)
+  VALUES('delete', old.id, old.title, old.type, old.source_name, old.reference, old.summary, old.full_text, old.keywords);
+  INSERT INTO legal_documents_fts(rowid, title, type, source_name, reference, summary, full_text, keywords)
+  VALUES (new.id, new.title, new.type, new.source_name, new.reference, new.summary, new.full_text, new.keywords);
+END;
+
+CREATE TRIGGER IF NOT EXISTS document_sections_ai AFTER INSERT ON document_sections BEGIN
+  INSERT INTO document_sections_fts(rowid, title, summary, full_text, keywords)
+  VALUES (new.id, new.title, new.summary, new.full_text, new.keywords);
+END;
+
+CREATE TRIGGER IF NOT EXISTS document_sections_ad AFTER DELETE ON document_sections BEGIN
+  INSERT INTO document_sections_fts(document_sections_fts, rowid, title, summary, full_text, keywords)
+  VALUES('delete', old.id, old.title, old.summary, old.full_text, old.keywords);
+END;
+
+CREATE TRIGGER IF NOT EXISTS document_sections_au AFTER UPDATE ON document_sections BEGIN
+  INSERT INTO document_sections_fts(document_sections_fts, rowid, title, summary, full_text, keywords)
+  VALUES('delete', old.id, old.title, old.summary, old.full_text, old.keywords);
+  INSERT INTO document_sections_fts(rowid, title, summary, full_text, keywords)
+  VALUES (new.id, new.title, new.summary, new.full_text, new.keywords);
+END;
 
 CREATE TABLE IF NOT EXISTS cases (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
