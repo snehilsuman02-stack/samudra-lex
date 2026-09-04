@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self';" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SAMUDRA-LEX</title>
+    <link rel="stylesheet" href="css/main.css" />
+  </head>
+  <body>
+    <div id="app">
+      <div id="login-screen" class="screen active">
+        <div class="login-shell">
+          <div class="login-panel">
+            <div class="brand-block">
+              <h1>SAMUDRA-LEX</h1>
+              <p>ICG Maritime Law Enforcement Decision-Support System</p>
+            </div>
+            <h2>Secure Local Login</h2>
+            <div class="form-group">
+              <label for="username">Username</label>
+              <input id="username" type="text" value="officer" />
+            </div>
+            <div class="form-group">
+              <label for="password">Password</label>
+              <input id="password" type="password" value="officer123" />
+            </div>
+            <button id="login-btn" class="primary-btn">LOGIN</button>
+            <p id="login-status" class="status-text"></p>
+          </div>
+        </div>
+      </div>
+
+      <div id="main-app" class="hidden">
+        <aside class="sidebar">
+          <div class="brand-header">
+            <div>
+              <div class="brand-name">SAMUDRA-LEX</div>
+              <div class="brand-meta">OFFLINE • LEGAL DB: v1.0.0</div>
+            </div>
+          </div>
+
+          <nav class="nav">
+            <button class="nav-item active" data-view="dashboard">Dashboard</button>
+            <button class="nav-item" data-view="situation">Situation Assistant</button>
+            <button class="nav-item" data-view="powers">What Can I Do?</button>
+            <button class="nav-item" data-view="law-library">Law Library</button>
+            <button class="nav-item" data-view="jurisdiction">Jurisdiction</button>
+            <button class="nav-item" data-view="boarding">Boarding</button>
+            <button class="nav-item" data-view="search-seizure">Search / Seizure</button>
+            <button class="nav-item" data-view="arrest">Arrest</button>
+            <button class="nav-item" data-view="evidence">Evidence</button>
+            <button class="nav-item" data-view="cases">Cases</button>
+            <button class="nav-item" data-view="checklists">Checklists</button>
+            <button class="nav-item" data-view="forms">Forms</button>
+            <button class="nav-item" data-view="updates">Legal Updates</button>
+            <button class="nav-item" data-view="settings">Settings</button>
+            <button class="nav-item" data-view="about">About</button>
+          </nav>
+        </aside>
+
+        <main class="workspace">
+          <header class="topbar">
+            <div class="topbar-title">
+              <h2>SAMUDRA-LEX</h2>
+              <span>Offline operational toolkit</span>
+            </div>
+            <div class="topbar-actions">
+              <div class="status-pill">ONLINE</div>
+              <button id="logout-btn" class="secondary-btn">LOGOUT</button>
+            </div>
+          </header>
+
+          <section class="search-panel">
+            <input id="global-search" type="text" placeholder="Describe the situation, search an Act, section, power or procedure..." />
+            <select id="search-filter">
+              <option value="ALL">ALL</option>
+              <option value="ACTS">ACTS</option>
+              <option value="SECTIONS">SECTIONS</option>
+              <option value="RULES">RULES</option>
+              <option value="NOTIFICATIONS">NOTIFICATIONS</option>
+              <option value="POWERS">POWERS</option>
+              <option value="OFFENCES">OFFENCES</option>
+              <option value="SCENARIOS">SCENARIOS</option>
+              <option value="PROCEDURES">PROCEDURES</option>
+              <option value="CHECKLISTS">CHECKLISTS</option>
+              <option value="FORMS">FORMS</option>
+            </select>
+          </section>
+
+          <div id="view-container" class="view-container"></div>
+        </main>
+      </div>
+    </div>
+
+    <script src="js/app.js"></script>
+  </body>
+</html>

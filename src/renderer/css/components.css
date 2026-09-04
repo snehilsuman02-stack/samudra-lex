@@ -1,0 +1,18 @@
+.panel-title {
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.inline-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(78,149,216,0.18);
+}
