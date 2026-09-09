@@ -1,0 +1,34 @@
+{
+  "relationships": [
+    {
+      "from": "act",
+      "to": "section",
+      "type": "contains"
+    },
+    {
+      "from": "section",
+      "to": "offence",
+      "type": "defines_or_supports"
+    },
+    {
+      "from": "section",
+      "to": "power",
+      "type": "provides_basis_for"
+    },
+    {
+      "from": "power",
+      "to": "condition",
+      "type": "subject_to"
+    },
+    {
+      "from": "condition",
+      "to": "procedure",
+      "type": "governs"
+    },
+    {
+      "from": "scenario",
+      "to": "act",
+      "type": "potentially_relevant"
+    }
+  ]
+}

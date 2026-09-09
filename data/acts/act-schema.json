@@ -1,17 +1,16 @@
 {
-  "_schemaOnly": true,
-  "_exampleOnly": true,
-  "_description": "Schema example only. No real Act or verified legal content is included.",
-  "act": {
-    "id": "example-act-id",
-    "actName": "Example Act Name (placeholder)",
-    "shortName": "EXAMPLE-ACT",
-    "jurisdiction": "Example jurisdiction (placeholder)",
-    "status": "UNVERIFIED_EXAMPLE",
-    "source": "Example source placeholder",
-    "sourceUrl": "https://example.invalid/source",
-    "effectiveDate": null,
-    "lastVerified": null,
-    "notes": "Replace all example values with verified source material before operational use."
-  }
+  "id": "",
+  "name": "",
+  "shortName": "",
+  "actNumber": "",
+  "year": "",
+  "authority": "",
+  "status": "",
+  "effectiveDate": "",
+  "sections": [],
+  "relatedRules": [],
+  "relatedNotifications": [],
+  "sourceId": "",
+  "verified": false,
+  "lastVerified": ""
 }

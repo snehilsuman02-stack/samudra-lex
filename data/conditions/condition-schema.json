@@ -2,11 +2,9 @@
   "id": "",
   "name": "",
   "description": "",
-  "steps": [],
-  "appliesToScenarios": [],
+  "appliesTo": [],
   "legalBasis": [],
-  "requiredEvidence": [],
-  "warnings": [],
+  "limitations": [],
   "sourceId": "",
   "verified": false,
   "lastVerified": ""

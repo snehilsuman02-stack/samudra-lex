@@ -1,23 +1,15 @@
 {
-  "_schemaOnly": true,
-  "_exampleOnly": true,
-  "_description": "Schema example only. No real section number, wording, or verified legal content is included.",
-  "section": {
-    "id": "example-section-id",
-    "actId": "example-act-id",
-    "sectionNumber": "EXAMPLE-SECTION",
-    "title": "Example section title (placeholder)",
-    "text": "[EXAMPLE ONLY - verified legal text goes here]",
-    "subsections": [
-      {
-        "id": "example-subsection-id",
-        "number": "EXAMPLE-SUBSECTION",
-        "text": "[EXAMPLE ONLY - verified subsection text goes here]",
-        "clauses": []
-      }
-    ],
-    "source": "Example source placeholder",
-    "sourceUrl": "https://example.invalid/source",
-    "lastVerified": null
-  }
+  "id": "",
+  "actId": "",
+  "sectionNumber": "",
+  "title": "",
+  "text": "",
+  "subsections": [],
+  "clauses": [],
+  "relatedOffences": [],
+  "relatedPowers": [],
+  "conditions": [],
+  "sourceId": "",
+  "verified": false,
+  "lastVerified": ""
 }
