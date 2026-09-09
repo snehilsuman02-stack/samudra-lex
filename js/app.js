@@ -120,13 +120,16 @@ function renderPowerAssessment(assessment) {
   const sections = [
     ["POTENTIALLY RELEVANT POWERS", assessment.applicablePowers],
     ["CONDITION-DEPENDENT POWERS", assessment.conditionalPowers],
-    ["NOT ESTABLISHED / INSUFFICIENT FACTS", assessment.unavailablePowers]
+    ["INSUFFICIENT FACTS", assessment.insufficientFacts]
   ];
   const markup = sections.map(([heading, powers]) => `<section class="power-group"><h4>${heading}</h4>${powers.length ? powers.map(renderPotentialPower).join("") : "<p>No powers in this category.</p>"}</section>`).join("");
   const dataWarning = assessment.warnings.includes("POWER DATA NOT AVAILABLE")
     ? "<p class=\"power-data-warning\">POWER DATA NOT AVAILABLE</p>"
     : "";
-  return `${dataWarning}${markup}<div class="legal-caution"><strong>LEGAL CAUTION</strong><p>This assessment identifies statutory provisions potentially relevant to the facts entered by the user. It does not by itself establish that an offence has occurred, that jurisdiction has been established, or that a particular enforcement action must be taken.</p><p>Verify the current law, applicable rules/orders/notifications, delegation or authorisation, jurisdiction and facts before action.</p></div>`;
+  const verificationWarning = assessment.warnings.includes("VERIFICATION DATA INCOMPLETE")
+    ? "<p class=\"power-data-warning\">VERIFICATION DATA INCOMPLETE</p>"
+    : "";
+  return `${dataWarning}${verificationWarning}${markup}<div class="legal-caution"><strong>LEGAL CAUTION</strong><p>This assessment identifies statutory provisions potentially relevant to the facts entered by the user. It does not by itself establish that an offence has occurred, that jurisdiction has been established, or that a particular enforcement action must be taken.</p><p>Verify the current law, applicable rules, orders, notifications, authorisation/delegation, jurisdiction and facts before action.</p></div>`;
 }
 
 function formatScenarioName(scenario) {

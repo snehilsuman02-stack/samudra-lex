@@ -61,8 +61,10 @@ export async function searchLegalData(query, detectedScenario = [], facts = null
     const scenarioLinked = detectedScenario.includes(foreignFishingScenario.id);
     const section9Terms = ["fishing", "authorised", "officer", "maritime", "zones", "section", "arrest", "crew", "seize", "detain", "board", "search"];
       const fishingFactPresent = facts ? facts.activity.includes("fishing") : !/\b(?:no|not)\s+fishing\b|\bfishing\s+not\s+observed\b/.test(normalizedQuery);
+    const foreignFactPresent = !facts || facts.nationality === "Foreign";
       const section9SearchMatch = queryTerms.some((term) => section9Terms.includes(term))
-        && (!queryTerms.includes("fishing") || fishingFactPresent);
+      && (!queryTerms.includes("fishing") || fishingFactPresent)
+      && foreignFactPresent;
     if (foreignFishingAct.status === "VERIFIED_SOURCE" && foreignFishingSection.status === "VERIFIED_SOURCE"
       && (scenarioLinked || section9SearchMatch)) {
       sources.push(toLegalSource(foreignFishingAct, foreignFishingSection));

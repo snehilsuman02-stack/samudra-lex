@@ -4,7 +4,7 @@ export async function assessLegalPowers(facts, scenario) {
   const assessment = {
     applicablePowers: [],
     conditionalPowers: [],
-    unavailablePowers: [],
+    insufficientFacts: [],
     warnings: [],
     legalBasis: []
   };
@@ -20,6 +20,20 @@ export async function assessLegalPowers(facts, scenario) {
     return assessment;
   }
   const scenarioIds = Array.isArray(scenario) ? scenario : [scenario];
+  const incompletePowerData = powers.filter((power) => [
+    power.id,
+    power.powerName,
+    power.legalBasis?.actId,
+    power.legalBasis?.sectionId,
+    power.legalBasis?.subsection,
+    power.description,
+    power.source,
+    power.sourceUrl,
+    power.lastVerified
+  ].some((value) => !value));
+  if (incompletePowerData.length) {
+    assessment.warnings.push("VERIFICATION DATA INCOMPLETE");
+  }
   const foreignFishingScenario = scenarioIds.includes("FOREIGN_FISHING_VESSEL");
   const foreignFishingFacts = foreignFishingScenario
     && facts.nationality === "Foreign"
@@ -27,7 +41,7 @@ export async function assessLegalPowers(facts, scenario) {
     && ["Fishing Vessel", "Fishing Boat", "Trawler"].includes(facts.vesselType);
 
   if (!foreignFishingFacts) {
-    assessment.unavailablePowers = powers.map((power) => ({
+    assessment.insufficientFacts = powers.map((power) => ({
       ...power,
       assessmentStatus: "NOT ESTABLISHED / INSUFFICIENT FACTS",
       assessmentReason: "The supplied facts do not establish the foreign fishing vessel framework for this assessment."
