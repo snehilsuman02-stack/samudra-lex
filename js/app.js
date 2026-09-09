@@ -1,5 +1,5 @@
 import { analyseSituation } from "./legalEngine.js";
-import { assessCase, createCase, saveCase } from "./caseAssessment.js";
+import { assessCase, createCase, listSavedCases, loadCase, saveCase } from "./caseAssessment.js";
 
 const form = document.querySelector("#analysis-form");
 const input = document.querySelector("#situation-input");
@@ -12,6 +12,7 @@ let currentCase = createCase();
 let evidenceItems = [];
 
 document.querySelector("#case-id").value = currentCase.caseId;
+renderSavedCases();
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -37,7 +38,15 @@ newAnalysisButton.addEventListener("click", () => {
 saveCaseButton.addEventListener("click", () => {
   currentCase = readCaseFromForm();
   saveCase(currentCase);
+  renderSavedCases();
   saveCaseButton.textContent = "Case saved";
+});
+
+document.querySelector("#load-case").addEventListener("click", () => {
+  const saved = loadCase(document.querySelector("#saved-case-select").value);
+  if (!saved) return;
+  currentCase = saved;
+  populateCaseForm(saved);
 });
 
 document.querySelector("#add-evidence").addEventListener("click", () => {
@@ -109,7 +118,7 @@ function renderCaseAssessment(caseResult) {
   const offences = assessment.offences.length
     ? assessment.offences.map((offence) => `<article class="case-offence"><h4>${escapeHtml(offence.name)}</h4><p class="case-status">${escapeHtml(offence.status)}</p><p>${escapeHtml(offence.reason)}</p><p class="statutory-label">LEGAL BASIS</p><p class="source-reference">${escapeHtml(offence.legalBasis.map((basis) => `${basis.actId} / ${basis.sectionId}`).join("; "))}</p><details><summary>Why this result?</summary>${renderDecisionTrace(offence)}</details></article>`).join("")
     : "<p>No applicable verified offence record was assessed.</p>";
-  return `<div class="result-block case-assessment"><h3>CASE ASSESSMENT</h3><p class="case-final-status">${escapeHtml(assessment.overallStatus)}</p><p>${escapeHtml(assessment.reasons.map((item) => item.reason).join(" "))}</p><h4>APPLICABLE OFFENCE(S)</h4>${offences}<h4>VERIFICATION REQUIRED</h4>${renderList(assessment.verificationRequired.map((item) => item.action), "No unresolved conditions identified.")}<h4>EVIDENCE GAPS</h4>${renderList(assessment.evidenceGaps.map((item) => `${item.action} (${item.evidenceStatus})`), "No evidence gaps identified.")}</div>`;
+  return `<div class="result-block case-assessment"><h3>CASE ASSESSMENT</h3><p class="case-final-status">${escapeHtml(assessment.overallStatus)}</p><p>${escapeHtml(assessment.reasons.map((item) => item.reason).join(" "))}</p><h4>APPLICABLE OFFENCE(S)</h4>${offences}<h4>FAILED CONDITIONS</h4>${renderList(assessment.failedConditions.map((item) => item.reason || item.description), "No failed conditions identified.")}<h4>VERIFICATION REQUIRED</h4>${renderList(assessment.verificationRequired.map((item) => item.action), "No unresolved conditions identified.")}<h4>EVIDENCE GAPS</h4>${renderList(assessment.evidenceGaps.map((item) => `${item.action} (${item.evidenceStatus})`), "No evidence gaps identified.")}</div>`;
 }
 
 function renderDecisionTrace(offence) {
@@ -165,6 +174,39 @@ function readCaseFromForm() {
 
 function renderEvidenceList() {
   evidenceList.innerHTML = evidenceItems.map((item) => `<li>${escapeHtml(item.type)}: ${escapeHtml(item.description)}${item.verified ? " (verified)" : " (not verified)"}</li>`).join("");
+}
+
+function renderSavedCases() {
+  const select = document.querySelector("#saved-case-select");
+  select.innerHTML = '<option value="">Select a saved case</option>';
+  listSavedCases().forEach((saved) => {
+    const option = document.createElement("option");
+    option.value = saved.caseId;
+    option.textContent = `${saved.caseId} — ${saved.incident.description || "No description"}`;
+    select.append(option);
+  });
+}
+
+function populateCaseForm(saved) {
+  input.value = saved.incident.description || "";
+  document.querySelector("#case-id").value = saved.caseId;
+  document.querySelector("#vessel-name").value = saved.vessel.name || "";
+  document.querySelector("#imo-number").value = saved.vessel.imoNumber || "";
+  document.querySelector("#call-sign").value = saved.vessel.callSign || "";
+  document.querySelector("#vessel-flag").value = saved.vessel.flag || "";
+  document.querySelector("#vessel-type").value = saved.vessel.vesselType || "";
+  document.querySelector("#vessel-owner").value = saved.vessel.owner || "";
+  document.querySelector("#incident-date-time").value = saved.incident.dateTime || "";
+  document.querySelector("#latitude").value = saved.incident.latitude || "";
+  document.querySelector("#longitude").value = saved.incident.longitude || "";
+  document.querySelector("#reported-location").value = saved.incident.reportedLocation || "";
+  document.querySelector("#observed-activity").value = (saved.incident.activity || []).join(", ");
+  document.querySelector("#maritime-zone").value = saved.jurisdiction.maritimeZone || "";
+  document.querySelector("#position-verified").value = String(Boolean(saved.jurisdiction.positionVerified));
+  document.querySelector("#distance-baseline").value = saved.jurisdiction.distanceFromBaseline || "";
+  document.querySelector("#person-role").value = saved.persons.role || "";
+  evidenceItems = Array.isArray(saved.evidence) ? saved.evidence : [];
+  renderEvidenceList();
 }
 
 function renderFacts(facts) {
