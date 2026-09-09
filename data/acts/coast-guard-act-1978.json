@@ -1,0 +1,15 @@
+{
+  "id": "coast-guard-act-1978",
+  "actName": "Coast Guard Act, 1978",
+  "shortName": "Coast Guard Act",
+  "year": 1978,
+  "jurisdiction": "India",
+  "status": "VERIFIED_SOURCE",
+  "source": "India Code, Legislative Department, Ministry of Law and Justice, Government of India",
+  "sourceUrl": "https://indiacode.gov.in/act/94f8385f-2f51-47aa-a918-d142168adad7",
+  "lastVerified": "2026-09-09",
+  "sections": [
+    "coast-guard-act-section-121"
+  ],
+  "notes": "This record contains only the verified Section 121 record added at this stage. It does not represent the complete Act database."
+}

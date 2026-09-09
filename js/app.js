@@ -6,9 +6,9 @@ const results = document.querySelector("#results");
 const resultContent = document.querySelector("#result-content");
 const newAnalysisButton = document.querySelector("#new-analysis");
 
-form.addEventListener("submit", (event) => {
+form.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const analysis = analyseSituation(input.value);
+  const analysis = await analyseSituation(input.value);
   renderAnalysis(analysis);
 });
 
@@ -22,6 +22,13 @@ function renderAnalysis(analysis) {
     ? `<ul class="scenario-list">${analysis.detectedScenario.map((scenario) => `<li>${scenario}</li>`).join("")}</ul>`
     : "<p>No broad operational scenario category detected from the supplied text.</p>";
 
+  const legalSourceMarkup = analysis.legalSources.length
+    ? analysis.legalSources.map(renderLegalSource).join("")
+    : `<div class="no-basis">
+        <strong>NO VERIFIED LEGAL BASIS FOUND</strong>
+        <p>No verified legal provision matched this situation. The application has not inferred any Act, section, power, procedure or operational conclusion.</p>
+      </div>`;
+
   resultContent.innerHTML = `
     <div class="result-block">
       <h3>Possible scenario categories</h3>
@@ -29,12 +36,36 @@ function renderAnalysis(analysis) {
       <p class="disclaimer">These categories are operational prompts only. They are not findings of fact or legal conclusions.</p>
     </div>
     <div class="result-block">
-      <div class="no-basis">
-        <strong>NO VERIFIED LEGAL BASIS FOUND</strong>
-        <p>The verified legal database has not yet been populated for this situation. No Acts, sections, powers, procedures or jurisdictional conclusions have been inferred.</p>
-      </div>
+      <h3>Legal source</h3>
+      ${legalSourceMarkup}
     </div>
   `;
   results.hidden = false;
   results.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function renderLegalSource(section) {
+  return `<article class="legal-source">
+    <p class="source-kicker">LEGAL SOURCE</p>
+    <h4>Coast Guard Act, 1978 — Section 121</h4>
+    <dl class="source-details">
+      <dt>Act</dt><dd>Coast Guard Act, 1978</dd>
+      <dt>Section</dt><dd>${escapeHtml(section.sectionNumber)}</dd>
+      <dt>Title</dt><dd>${escapeHtml(section.title)}</dd>
+    </dl>
+    <p class="statutory-label">STATUTORY TEXT</p>
+    <div class="statutory-text">${escapeHtml(section.text)}</div>
+    <p class="statutory-label">SOURCE</p>
+    <p class="source-reference">${escapeHtml(section.source)}<br><a href="${escapeHtml(section.sourceUrl)}" target="_blank" rel="noreferrer">Official India Code source</a><br>Last verified: ${escapeHtml(section.lastVerified)}</p>
+    <p class="disclaimer">This display contains statutory text only. It is not an operational interpretation or an automatic authorisation for a particular action.</p>
+  </article>`;
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }

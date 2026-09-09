@@ -15,3 +15,11 @@ export function loadActSchema() {
 export function loadScenarioSchema() {
   return loadJson("scenarios/schema.json");
 }
+
+export function loadCoastGuardAct() {
+  return loadJson("acts/coast-guard-act-1978.json");
+}
+
+export function loadCoastGuardSection121() {
+  return loadJson("sections/coast-guard-act-section-121.json");
+}
