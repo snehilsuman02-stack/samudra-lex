@@ -1,0 +1,22 @@
+{
+  "id": "mz-fishing-section-9-catch-equipment",
+  "powerName": "Require and examine catch or fishing equipment",
+  "legalBasis": {
+    "actId": "maritime-zones-fishing-foreign-vessels-act-1981",
+    "sectionId": "mz-fishing-foreign-vessels-section-9",
+    "subsection": "(1)(b)(ii)"
+  },
+  "description": "Section 9(1)(b)(ii) states that the master may be required to produce catch, net, fishing gear or other equipment on board or belonging to the vessel, which may be examined.",
+  "conditions": [
+    "The officer must meet the eligibility described in Section 9(1).",
+    "The purpose is ascertaining whether the requirements of the Act have been complied with.",
+    "The power is stated to be exercisable with or without a warrant."
+  ],
+  "limitations": [
+    "The statutory text identifies the listed catch and equipment categories.",
+    "This record does not determine applicability in a particular situation."
+  ],
+  "source": "India Code, Legislative Department, Ministry of Law and Justice, Government of India",
+  "sourceUrl": "https://indiacode.gov.in/handle/123456789/618694",
+  "lastVerified": "2026-09-09"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "mz-fishing-section-9-seizure-detention",
+  "powerName": "Seize and detain a vessel or specified items",
+  "legalBasis": {
+    "actId": "maritime-zones-fishing-foreign-vessels-act-1981",
+    "sectionId": "mz-fishing-foreign-vessels-section-9",
+    "subsection": "(2)(a)"
+  },
+  "description": "Section 9(2)(a) states that an authorised officer may seize and detain the foreign vessel and specified fishing gear, fish equipment, stores or cargo, and may seize and detain fishing gear abandoned by the vessel.",
+  "conditions": [
+    "The officer must be the authorised officer referred to in Section 9(1).",
+    "The officer must have reason to believe that the foreign vessel has been, is being, or is about to be, used for committing an offence under the Act.",
+    "The power is stated to be exercisable with or without a warrant."
+  ],
+  "limitations": [
+    "The statutory reason-to-believe condition must be satisfied.",
+    "Section 9(4) provides subsequent Magistrate-related safeguards and notifications.",
+    "This record is not an instruction to seize or detain."
+  ],
+  "source": "India Code, Legislative Department, Ministry of Law and Justice, Government of India",
+  "sourceUrl": "https://indiacode.gov.in/handle/123456789/618694",
+  "lastVerified": "2026-09-09"
+}

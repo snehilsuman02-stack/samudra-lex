@@ -1,0 +1,22 @@
+{
+  "id": "mz-fishing-section-9-arrest",
+  "powerName": "Arrest a person where the statutory reason-to-believe condition is met",
+  "legalBasis": {
+    "actId": "maritime-zones-fishing-foreign-vessels-act-1981",
+    "sectionId": "mz-fishing-foreign-vessels-section-9",
+    "subsection": "(2)(c)"
+  },
+  "description": "Section 9(2)(c) states that an authorised officer may arrest a person whom the officer has reason to believe has committed the offence described in Section 9(2).",
+  "conditions": [
+    "The officer must be the authorised officer referred to in Section 9(1).",
+    "The Section 9(2) reason-to-believe condition must be met.",
+    "Section 9(4)(b) requires the arrested person to be informed of the grounds and produced before the Magistrate without unnecessary delay."
+  ],
+  "limitations": [
+    "This record does not answer whether arrest is lawful in a particular situation.",
+    "This record is not an arrest instruction."
+  ],
+  "source": "India Code, Legislative Department, Ministry of Law and Justice, Government of India",
+  "sourceUrl": "https://indiacode.gov.in/handle/123456789/618694",
+  "lastVerified": "2026-09-09"
+}

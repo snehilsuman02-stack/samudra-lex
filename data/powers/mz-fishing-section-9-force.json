@@ -1,0 +1,21 @@
+{
+  "id": "mz-fishing-section-9-force",
+  "powerName": "Use force reasonably necessary for action under Section 9(2)",
+  "legalBasis": {
+    "actId": "maritime-zones-fishing-foreign-vessels-act-1981",
+    "sectionId": "mz-fishing-foreign-vessels-section-9",
+    "subsection": "(3)"
+  },
+  "description": "Section 9(3) states that, in taking any action under Section 9(2), the authorised officer may use such force as may be reasonably necessary.",
+  "conditions": [
+    "The action must be action under Section 9(2).",
+    "The officer must be the authorised officer referred to in Section 9(2)."
+  ],
+  "limitations": [
+    "The statutory wording limits the force to what may be reasonably necessary.",
+    "This record is not an instruction or use-of-force guidance."
+  ],
+  "source": "India Code, Legislative Department, Ministry of Law and Justice, Government of India",
+  "sourceUrl": "https://indiacode.gov.in/handle/123456789/618694",
+  "lastVerified": "2026-09-09"
+}

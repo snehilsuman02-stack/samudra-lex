@@ -1,0 +1,22 @@
+{
+  "id": "mz-fishing-section-9-stop-search",
+  "powerName": "Stop, board and search a foreign vessel",
+  "legalBasis": {
+    "actId": "maritime-zones-fishing-foreign-vessels-act-1981",
+    "sectionId": "mz-fishing-foreign-vessels-section-9",
+    "subsection": "(1)(a)"
+  },
+  "description": "Section 9(1)(a) states that an eligible officer may stop or board a foreign vessel in any maritime zone of India and search it for fish and equipment used or capable of being used for fishing.",
+  "conditions": [
+    "The officer must be an officer of the Coast Guard constituted under the Coast Guard Act, 1978, or another Government officer authorised by the Central Government.",
+    "The purpose is ascertaining whether the requirements of the Act have been complied with.",
+    "The power is stated to be exercisable with or without a warrant."
+  ],
+  "limitations": [
+    "The statutory text refers to a foreign vessel in any maritime zone of India.",
+    "This record does not determine jurisdiction or applicability in a particular situation."
+  ],
+  "source": "India Code, Legislative Department, Ministry of Law and Justice, Government of India",
+  "sourceUrl": "https://indiacode.gov.in/handle/123456789/618694",
+  "lastVerified": "2026-09-09"
+}

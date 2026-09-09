@@ -1,0 +1,22 @@
+{
+  "id": "mz-fishing-section-9-pursuit",
+  "powerName": "Exercise Section 9 powers beyond the exclusive economic zone in a defined pursuit circumstance",
+  "legalBasis": {
+    "actId": "maritime-zones-fishing-foreign-vessels-act-1981",
+    "sectionId": "mz-fishing-foreign-vessels-section-9",
+    "subsection": "(5)"
+  },
+  "description": "Section 9(5) states that where, in pursuance of the commission of an offence under the Act, a foreign vessel is pursued beyond the limits of the exclusive economic zone of India, the powers conferred on an authorised officer by Section 9 may be exercised beyond those limits in the circumstances and to the extent recognised by international law and State practice.",
+  "conditions": [
+    "The circumstance must involve pursuit in pursuance of the commission of an offence under the Act.",
+    "The vessel must have been pursued beyond the limits of the exclusive economic zone of India.",
+    "The circumstances and extent must be recognised by international law and State practice."
+  ],
+  "limitations": [
+    "This record does not determine the maritime zone or whether the international-law condition is met.",
+    "This record does not calculate jurisdiction from distance."
+  ],
+  "source": "India Code, Legislative Department, Ministry of Law and Justice, Government of India",
+  "sourceUrl": "https://indiacode.gov.in/handle/123456789/618694",
+  "lastVerified": "2026-09-09"
+}

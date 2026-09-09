@@ -1,0 +1,36 @@
+{
+  "id": "FOREIGN_FISHING_VESSEL",
+  "name": "Foreign Fishing Vessel",
+  "description": "An operational scenario classification for a foreign vessel described as engaged in fishing. This classification is not a finding that an offence has occurred.",
+  "keywords": [
+    "foreign fishing vessel",
+    "foreign vessel fishing",
+    "foreign fishing boat",
+    "fishing vessel from another country",
+    "foreign trawler fishing"
+  ],
+  "relatedActs": [
+    "maritime-zones-fishing-foreign-vessels-act-1981",
+    "coast-guard-act-1978"
+  ],
+  "relatedSections": [
+    "mz-fishing-foreign-vessels-section-9",
+    "coast-guard-act-section-121"
+  ],
+  "relatedPowers": [
+    "mz-fishing-section-9-stop-search",
+    "mz-fishing-section-9-documents",
+    "mz-fishing-section-9-catch-equipment",
+    "mz-fishing-section-9-inquiries",
+    "mz-fishing-section-9-seizure-detention",
+    "mz-fishing-section-9-port-direction",
+    "mz-fishing-section-9-arrest",
+    "mz-fishing-section-9-force",
+    "mz-fishing-section-9-pursuit"
+  ],
+  "warnings": [
+    "Foreign status and fishing activity do not by themselves establish illegal fishing or any other offence.",
+    "The linked provision is a legal source to review, not a legal authority to act in a particular situation.",
+    "Jurisdiction requires confirmation from applicable law, orders, authorisations and verified facts."
+  ]
+}

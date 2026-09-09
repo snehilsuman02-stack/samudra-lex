@@ -1,5 +1,12 @@
 import { detectScenarios } from "./scenarioEngine.js";
-import { loadCoastGuardAct, loadCoastGuardSection121 } from "./dataLoader.js";
+import {
+  loadCoastGuardAct,
+  loadCoastGuardSection121,
+  loadForeignFishingVesselScenario,
+  loadForeignFishingAct,
+  loadForeignFishingSection9,
+  loadForeignFishingSection9Powers
+} from "./dataLoader.js";
 
 export function createEmptyAnalysis(input, detectedScenario = []) {
   return {
@@ -24,12 +31,15 @@ export async function analyseSituation(userInput) {
   const detectedScenario = detectScenarios(input);
   const analysis = createEmptyAnalysis(input, detectedScenario);
 
-  analysis.legalSources = await searchLegalData(input);
+  analysis.legalSources = await searchLegalData(input, detectedScenario);
+  if (analysis.legalSources.some((source) => source.sectionId === "mz-fishing-foreign-vessels-section-9")) {
+    analysis.potentialPowers = await loadForeignFishingSection9Powers();
+  }
 
   return analysis;
 }
 
-export async function searchLegalData(query) {
+export async function searchLegalData(query, detectedScenario = []) {
   const normalizedQuery = normalizeText(query);
   const queryTerms = normalizedQuery.split(" ").filter((term) => term.length >= 3);
 
@@ -38,38 +48,53 @@ export async function searchLegalData(query) {
   }
 
   try {
-    const [act, section] = await Promise.all([
+    const [coastGuardAct, coastGuardSection, foreignFishingScenario, foreignFishingAct, foreignFishingSection] = await Promise.all([
       loadCoastGuardAct(),
-      loadCoastGuardSection121()
+      loadCoastGuardSection121(),
+      loadForeignFishingVesselScenario(),
+      loadForeignFishingAct(),
+      loadForeignFishingSection9()
     ]);
 
-    if (act.status !== "VERIFIED_SOURCE" || section.status !== "VERIFIED_SOURCE") {
-      return [];
+    const sources = [];
+    const scenarioLinked = detectedScenario.includes(foreignFishingScenario.id);
+    const section9Terms = ["foreign", "fishing", "authorised", "officer", "maritime", "zones", "section", "arrest", "crew", "seize", "detain", "board", "search"];
+    const section9SearchMatch = queryTerms.some((term) => section9Terms.includes(term));
+    if (foreignFishingAct.status === "VERIFIED_SOURCE" && foreignFishingSection.status === "VERIFIED_SOURCE"
+      && (scenarioLinked || section9SearchMatch)) {
+      sources.push(toLegalSource(foreignFishingAct, foreignFishingSection));
     }
 
-    const searchableText = normalizeText([
-      act.actName,
-      act.shortName,
-      `section ${section.sectionNumber}`,
-      section.title
+    const coastGuardSearchableText = normalizeText([
+      coastGuardAct.actName,
+      coastGuardAct.shortName,
+      `section ${coastGuardSection.sectionNumber}`,
+      coastGuardSection.title
     ].join(" "));
-
-    if (!queryTerms.some((term) => searchableText.includes(term))) {
-      return [];
+    const coastGuardMatch = queryTerms.some((term) => coastGuardSearchableText.includes(term));
+    if (coastGuardAct.status === "VERIFIED_SOURCE" && coastGuardSection.status === "VERIFIED_SOURCE"
+      && (scenarioLinked || coastGuardMatch)) {
+      sources.push(toLegalSource(coastGuardAct, coastGuardSection));
     }
 
-    return [{
-      actName: act.actName,
-      sectionNumber: section.sectionNumber,
-      title: section.title,
-      text: section.text,
-      source: section.source,
-      sourceUrl: section.sourceUrl,
-      lastVerified: section.lastVerified
-    }];
+    return sources;
   } catch (error) {
     return [];
   }
+}
+
+function toLegalSource(act, section) {
+  return {
+    actId: act.id,
+    sectionId: section.id,
+    actName: act.actName,
+    sectionNumber: section.sectionNumber,
+    title: section.title,
+    text: section.text,
+    source: section.source,
+    sourceUrl: section.sourceUrl,
+    lastVerified: section.lastVerified
+  };
 }
 
 function normalizeText(value) {

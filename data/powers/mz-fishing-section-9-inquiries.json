@@ -1,0 +1,21 @@
+{
+  "id": "mz-fishing-section-9-inquiries",
+  "powerName": "Make inquiries concerning compliance or an offence",
+  "legalBasis": {
+    "actId": "maritime-zones-fishing-foreign-vessels-act-1981",
+    "sectionId": "mz-fishing-foreign-vessels-section-9",
+    "subsection": "(1)(c)"
+  },
+  "description": "Section 9(1)(c) states that the eligible officer may make inquiries necessary to ascertain whether an offence under the Act has been committed.",
+  "conditions": [
+    "The officer must meet the eligibility described in Section 9(1).",
+    "The inquiry must be necessary for the statutory purpose stated in Section 9(1)(c)."
+  ],
+  "limitations": [
+    "The provision does not by itself establish that an offence has been committed.",
+    "This record does not prescribe an investigation procedure."
+  ],
+  "source": "India Code, Legislative Department, Ministry of Law and Justice, Government of India",
+  "sourceUrl": "https://indiacode.gov.in/handle/123456789/618694",
+  "lastVerified": "2026-09-09"
+}

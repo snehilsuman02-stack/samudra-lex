@@ -1,5 +1,13 @@
 const SCENARIO_RULES = [
-  { id: "FOREIGN_FISHING_VESSEL", keywords: ["foreign vessel", "foreign fishing", "fishing vessel"] },
+  {
+    id: "FOREIGN_FISHING_VESSEL",
+    matches: (input) => {
+      const foreignIndicator = /\bforeign\b|\b(?:another|a different)\s+country\b/.test(input);
+      const fishingActivity = /\bfishing\b/.test(input);
+      const vesselType = /\b(?:vessel|boat|trawler)\b/.test(input);
+      return foreignIndicator && fishingActivity && vesselType;
+    }
+  },
   { id: "ILLEGAL_FISHING", keywords: ["illegal fishing", "unauthorized fishing", "fishing without"] },
   { id: "VESSEL_REFUSING_TO_STOP", keywords: ["refusing to stop", "refused to stop", "failed to stop", "not stopping"] },
   { id: "SUSPECTED_SMUGGLING", keywords: ["smuggling", "smuggled", "contraband"] },
@@ -17,6 +25,8 @@ const SCENARIO_RULES = [
 export function detectScenarios(input) {
   const normalizedInput = String(input || "").toLowerCase();
   return SCENARIO_RULES
-    .filter((rule) => rule.keywords.some((keyword) => normalizedInput.includes(keyword)))
+    .filter((rule) => typeof rule.matches === "function"
+      ? rule.matches(normalizedInput)
+      : rule.keywords.some((keyword) => normalizedInput.includes(keyword)))
     .map((rule) => rule.id);
 }

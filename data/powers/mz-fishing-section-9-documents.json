@@ -1,0 +1,22 @@
+{
+  "id": "mz-fishing-section-9-documents",
+  "powerName": "Require vessel documents and examine or copy them",
+  "legalBasis": {
+    "actId": "maritime-zones-fishing-foreign-vessels-act-1981",
+    "sectionId": "mz-fishing-foreign-vessels-section-9",
+    "subsection": "(1)(b)(i)"
+  },
+  "description": "Section 9(1)(b)(i) states that the master may be required to produce a licence, permit, log book or other document relating to the vessel, which may be examined or copied.",
+  "conditions": [
+    "The officer must meet the eligibility described in Section 9(1).",
+    "The purpose is ascertaining whether the requirements of the Act have been complied with.",
+    "The power is stated to be exercisable with or without a warrant."
+  ],
+  "limitations": [
+    "The statutory text concerns documents relating to the vessel.",
+    "This record does not determine which document is required in a particular situation."
+  ],
+  "source": "India Code, Legislative Department, Ministry of Law and Justice, Government of India",
+  "sourceUrl": "https://indiacode.gov.in/handle/123456789/618694",
+  "lastVerified": "2026-09-09"
+}

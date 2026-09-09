@@ -1,0 +1,21 @@
+{
+  "id": "mz-fishing-section-9-port-direction",
+  "powerName": "Require a seized or detained vessel to be brought to a specified port",
+  "legalBasis": {
+    "actId": "maritime-zones-fishing-foreign-vessels-act-1981",
+    "sectionId": "mz-fishing-foreign-vessels-section-9",
+    "subsection": "(2)(b)"
+  },
+  "description": "Section 9(2)(b) states that the master of a vessel so seized or detained may be required to bring the vessel to a specified port.",
+  "conditions": [
+    "The vessel must be the vessel so seized or detained under Section 9(2).",
+    "The Section 9(2) reason-to-believe condition applies."
+  ],
+  "limitations": [
+    "This record does not identify a port or provide an operational direction.",
+    "The statutory and jurisdictional conditions must be assessed from verified facts."
+  ],
+  "source": "India Code, Legislative Department, Ministry of Law and Justice, Government of India",
+  "sourceUrl": "https://indiacode.gov.in/handle/123456789/618694",
+  "lastVerified": "2026-09-09"
+}

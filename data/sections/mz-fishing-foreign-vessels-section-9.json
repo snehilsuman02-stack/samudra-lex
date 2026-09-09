@@ -1,0 +1,96 @@
+{
+  "id": "mz-fishing-foreign-vessels-section-9",
+  "actId": "maritime-zones-fishing-foreign-vessels-act-1981",
+  "sectionNumber": "9",
+  "title": "Authorised officers and their powers.",
+  "text": "(1) Any officer of the Coast Guard constituted under the Coast Guard Act, 1978 (30 of 1978), or such other officer of Government as may be authorised by the Central Government may, for the purpose of ascertaining whether or not the requirements of this Act have been complied with, either with or without a warrant,--\n\n(a) stop or board a foreign vessel in any maritime zone of India and search such vessel for fish and for equipment used or capable of being used for fishing;\n\n(b) require the master of such vessel to produce--\n\n(i) any licence, permit, log book or other document relating to the vessel and examine or take copies of such licence, permit, log book or document;\n\n(ii) any catch, net, fishing gear or other equipment on board such vessel or belonging to the vessel and examine such fish, net, gear or equipment;\n\n(c) make such inquiries as may be necessary to ascertain whether any offence under this Act has been committed.\n\n(2) Where the officer referred to in sub-section (1) (hereinafter referred to as authorised officer) has reason to believe that any foreign vessel has been, is being, or is about to be, used for committing an offence under this Act, he may, with or without a warrant,--\n\n(a) seize and detain such vessel, including any fishing gear, fish equipment, stores or cargo found on board such vessel or belonging to the vessel, and seize and detain any fishing gear abandoned by the vessel;\n\n(b) require the master of the vessel so seized or detained to bring such vessel to any specified port;\n\n(c) arrest any person who, such officer has reason to believe, has committed such an offence.\n\n(3) In taking any action under sub-section (2), the authorised officer may use such force as may be reasonably necessary.\n\n(4) Where any vessel or other things are seized, or any person has been arrested, under sub-section (2),\n\n(a) the vessel or other things so seized shall, as soon as possible, be produced before a Magistrate competent to try an offence under this Act who shall make such order as he may deem fit for the retention or custody of such vessel or things with Government or with any other authority pending the completion of any proceedings for the prosecution of any offence under this Act or for its use by such authority during such retention or custody on such terms and conditions as the Magistrate may think fit:\n\nProvided that the Magistrate may, on an application made by the owner or master of such vessel in the prescribed form, order the release of the vessel or other things so seized on the owner or master furnishing security in the form of cash or a bank guarantee for an amount not less than fifty per cent of the value of the vessel or things so seized:\n\nProvided further that where any fish so seized is subject to deterioration, the Magistrate may authorise the sale of such fish and the depositing of the proceeds of such sale in Court;\n\n(b) the arrested person shall, as soon as possible, be informed of the grounds for such arrest and he shall, without unnecessary delay, be produced before such Magistrate; and\n\n(c) the Central Government shall be informed of such seizure or arrest and the details thereof.\n\n(5) Where, in pursuance of the commission of any offence under this Act, any foreign vessel is pursued beyond the limits of the exclusive economic zone of India, the powers conferred on an authorised officer by this section may be exercised beyond such limits in the circumstances and to the extent recognised by international law and State practice.",
+  "subsections": [
+    {
+      "number": "(1)",
+      "text": "Any officer of the Coast Guard constituted under the Coast Guard Act, 1978 (30 of 1978), or such other officer of Government as may be authorised by the Central Government may, for the purpose of ascertaining whether or not the requirements of this Act have been complied with, either with or without a warrant,--",
+      "clauses": [
+        {
+          "number": "(a)",
+          "text": "stop or board a foreign vessel in any maritime zone of India and search such vessel for fish and for equipment used or capable of being used for fishing;"
+        },
+        {
+          "number": "(b)",
+          "text": "require the master of such vessel to produce--",
+          "subclauses": [
+            {
+              "number": "(i)",
+              "text": "any licence, permit, log book or other document relating to the vessel and examine or take copies of such licence, permit, log book or document;"
+            },
+            {
+              "number": "(ii)",
+              "text": "any catch, net, fishing gear or other equipment on board such vessel or belonging to the vessel and examine such fish, net, gear or equipment;"
+            }
+          ]
+        },
+        {
+          "number": "(c)",
+          "text": "make such inquiries as may be necessary to ascertain whether any offence under this Act has been committed."
+        }
+      ]
+    },
+    {
+      "number": "(2)",
+      "text": "Where the officer referred to in sub-section (1) (hereinafter referred to as authorised officer) has reason to believe that any foreign vessel has been, is being, or is about to be, used for committing an offence under this Act, he may, with or without a warrant,--",
+      "clauses": [
+        {
+          "number": "(a)",
+          "text": "seize and detain such vessel, including any fishing gear, fish equipment, stores or cargo found on board such vessel or belonging to the vessel, and seize and detain any fishing gear abandoned by the vessel;"
+        },
+        {
+          "number": "(b)",
+          "text": "require the master of the vessel so seized or detained to bring such vessel to any specified port;"
+        },
+        {
+          "number": "(c)",
+          "text": "arrest any person who, such officer has reason to believe, has committed such an offence."
+        }
+      ]
+    },
+    {
+      "number": "(3)",
+      "text": "In taking any action under sub-section (2), the authorised officer may use such force as may be reasonably necessary.",
+      "clauses": []
+    },
+    {
+      "number": "(4)",
+      "text": "Where any vessel or other things are seized, or any person has been arrested, under sub-section (2),",
+      "clauses": [
+        {
+          "number": "(a)",
+          "text": "the vessel or other things so seized shall, as soon as possible, be produced before a Magistrate competent to try an offence under this Act who shall make such order as he may deem fit for the retention or custody of such vessel or things with Government or with any other authority pending the completion of any proceedings for the prosecution of any offence under this Act or for its use by such authority during such retention or custody on such terms and conditions as the Magistrate may think fit."
+        },
+        {
+          "number": "Proviso",
+          "text": "Provided that the Magistrate may, on an application made by the owner or master of such vessel in the prescribed form, order the release of the vessel or other things so seized on the owner or master furnishing security in the form of cash or a bank guarantee for an amount not less than fifty per cent of the value of the vessel or things so seized."
+        },
+        {
+          "number": "Further proviso",
+          "text": "Provided further that where any fish so seized is subject to deterioration, the Magistrate may authorise the sale of such fish and the depositing of the proceeds of such sale in Court."
+        },
+        {
+          "number": "(b)",
+          "text": "the arrested person shall, as soon as possible, be informed of the grounds for such arrest and he shall, without unnecessary delay, be produced before such Magistrate; and"
+        },
+        {
+          "number": "(c)",
+          "text": "the Central Government shall be informed of such seizure or arrest and the details thereof."
+        }
+      ]
+    },
+    {
+      "number": "(5)",
+      "text": "Where, in pursuance of the commission of any offence under this Act, any foreign vessel is pursued beyond the limits of the exclusive economic zone of India, the powers conferred on an authorised officer by this section may be exercised beyond such limits in the circumstances and to the extent recognised by international law and State practice.",
+      "clauses": []
+    }
+  ],
+  "source": "India Code, Legislative Department, Ministry of Law and Justice, Government of India",
+  "sourceUrl": "https://indiacode.gov.in/handle/123456789/618694",
+  "lastVerified": "2026-09-09",
+  "status": "VERIFIED_SOURCE",
+  "notes": "Statutory text is reproduced from the official India Code Section 9 record. This record is statutory text only; it is not an operational interpretation or an automatic instruction to stop, board, search, seize, detain, arrest or use force. Applicability depends on the statutory conditions, facts, jurisdiction and other applicable requirements."
+}
