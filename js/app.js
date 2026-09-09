@@ -26,7 +26,7 @@ function renderAnalysis(analysis) {
     ? analysis.legalSources.map(renderLegalSource).join("")
     : `<div class="no-basis">
         <strong>NO VERIFIED LEGAL BASIS FOUND</strong>
-        <p>No verified legal provision matched this situation. The application has not inferred any Act, section, power, procedure or operational conclusion.</p>
+        <p>The current legal database does not contain a verified provision matching this query.</p>
       </div>`;
 
   resultContent.innerHTML = `
@@ -36,7 +36,7 @@ function renderAnalysis(analysis) {
       <p class="disclaimer">These categories are operational prompts only. They are not findings of fact or legal conclusions.</p>
     </div>
     <div class="result-block">
-      <h3>Legal source</h3>
+      <h3>Legal sources found</h3>
       ${legalSourceMarkup}
     </div>
   `;
@@ -46,10 +46,10 @@ function renderAnalysis(analysis) {
 
 function renderLegalSource(section) {
   return `<article class="legal-source">
-    <p class="source-kicker">LEGAL SOURCE</p>
-    <h4>Coast Guard Act, 1978 — Section 121</h4>
+    <p class="source-kicker">LEGAL SOURCES FOUND</p>
+    <h4>${escapeHtml(section.actName)} — Section ${escapeHtml(section.sectionNumber)}</h4>
     <dl class="source-details">
-      <dt>Act</dt><dd>Coast Guard Act, 1978</dd>
+      <dt>Act</dt><dd>${escapeHtml(section.actName)}</dd>
       <dt>Section</dt><dd>${escapeHtml(section.sectionNumber)}</dd>
       <dt>Title</dt><dd>${escapeHtml(section.title)}</dd>
     </dl>
