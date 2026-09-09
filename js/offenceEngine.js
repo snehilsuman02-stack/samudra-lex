@@ -91,14 +91,10 @@ function evaluateRequirement(requirement, facts, scenarioIds) {
     };
   }
 
-  const evaluations = requirementDefinitions.map((definition) => evaluateStructuredDefinition(definition, facts));
+  const evaluations = requirementDefinitions.map((definition) => evaluateCondition(definition, facts));
   const supportingFacts = evaluations.flatMap((evaluation) => evaluation.supportingFacts);
   const missingFacts = evaluations.flatMap((evaluation) => evaluation.missingFacts);
-  const status = evaluations.every((evaluation) => evaluation.status === "SATISFIED")
-    ? "SATISFIED"
-    : evaluations.some((evaluation) => evaluation.status === "NOT_ESTABLISHED")
-      ? "NOT_ESTABLISHED"
-      : "UNKNOWN";
+  const status = evaluations.every((evaluation) => evaluation.status === "ESTABLISHED") ? "SATISFIED" : "UNKNOWN";
 
   return {
     requirementId: requirement.id || "",
@@ -113,11 +109,15 @@ function evaluateRequirement(requirement, facts, scenarioIds) {
 
 function evaluateOffence(offence, facts, scenarioIds) {
   const elements = Array.isArray(offence.elements) ? offence.elements.map((element) => evaluateElement(element, facts)) : [];
-  const establishedCount = elements.filter((element) => element.status === "ESTABLISHED").length;
-  const unresolvedCount = elements.filter((element) => element.status !== "ESTABLISHED").length;
-  const status = elements.length && establishedCount === elements.length
+  const requiredElements = elements.filter((element) => element.required !== false);
+  const establishedCount = requiredElements.filter((element) => element.status === "ESTABLISHED").length;
+  const hasNotEstablished = requiredElements.some((element) => element.status === "NOT_ESTABLISHED");
+  const hasUnknown = requiredElements.some((element) => element.status === "UNKNOWN");
+  const status = requiredElements.length > 0 && establishedCount === requiredElements.length
     ? "OFFENCE ESTABLISHED"
-    : establishedCount > 0 && unresolvedCount > 0
+    : hasNotEstablished
+      ? "NOT ESTABLISHED"
+      : establishedCount > 0 && hasUnknown
       ? "SUSPECTED / REQUIRES FURTHER VERIFICATION"
       : "NOT ESTABLISHED";
 
@@ -135,49 +135,62 @@ function evaluateOffence(offence, facts, scenarioIds) {
 }
 
 function evaluateElement(element, facts) {
-  if (!element || typeof element !== "object" || Array.isArray(element) || !Array.isArray(element.factKeys)) {
+  if (!element || typeof element !== "object" || Array.isArray(element)) {
     return {
       elementId: element?.id || "",
       element: typeof element === "string" ? element : "",
+      required: true,
       status: "UNKNOWN",
       supportingFacts: [],
       missingFacts: [],
-      warnings: ["Offence element is not structured for reliable assessment."]
+      warnings: ["Offence element is not sufficiently structured for reliable assessment."]
     };
   }
 
-  const required = element.required !== false;
-  const values = element.factKeys.map((factKey) => readFact(facts, factKey));
-  const knownValues = values.filter((value) => value !== undefined && value !== null && value !== "");
-  const status = !required || knownValues.length === values.length
-    ? "ESTABLISHED"
-    : knownValues.length
-      ? "NOT_ESTABLISHED"
-      : "UNKNOWN";
   return {
     elementId: element.id || "",
     element: element.description || "",
-    status,
-    supportingFacts: knownValues.map((value) => `${element.factKeys[values.indexOf(value)]}: ${String(value)}`),
-    missingFacts: status === "ESTABLISHED" ? [] : element.factKeys.filter((factKey, index) => values[index] === undefined || values[index] === null || values[index] === ""),
-    warnings: []
+    required: element.required !== false,
+    ...evaluateCondition(element, facts)
   };
 }
 
-function evaluateStructuredDefinition(definition, facts) {
-  if (!Array.isArray(definition.factKeys)) {
+function evaluateCondition(condition, facts) {
+  const factKey = condition.factKey;
+  const operator = String(condition.operator || "").toUpperCase();
+  const expectedValueRequired = ["EQUALS", "NOT_EQUALS", "CONTAINS"].includes(operator);
+  const supportedOperator = ["EQUALS", "NOT_EQUALS", "CONTAINS", "TRUE", "FALSE", "EXISTS"].includes(operator);
+
+  if (!factKey || !supportedOperator || (expectedValueRequired && (condition.expectedValue === undefined || condition.expectedValue === ""))) {
     return {
       status: "UNKNOWN",
       supportingFacts: [],
-      missingFacts: ["Requirement definition is not structured for reliable assessment"]
+      missingFacts: [],
+      warnings: ["Offence element is not sufficiently structured for reliable assessment."]
     };
   }
-  const values = definition.factKeys.map((factKey) => readFact(facts, factKey));
-  const knownValues = values.filter((value) => value !== undefined && value !== null && value !== "");
+
+  const value = readFact(facts, factKey);
+  const exists = value !== undefined && value !== null && value !== "";
+  if (!exists) {
+    return { status: "UNKNOWN", supportingFacts: [], missingFacts: [factKey], warnings: [] };
+  }
+
+  let satisfied = false;
+  if (operator === "EQUALS") satisfied = value === condition.expectedValue;
+  if (operator === "NOT_EQUALS") satisfied = value !== condition.expectedValue;
+  if (operator === "CONTAINS") satisfied = Array.isArray(value)
+    ? value.includes(condition.expectedValue)
+    : String(value).includes(String(condition.expectedValue));
+  if (operator === "TRUE") satisfied = value === true;
+  if (operator === "FALSE") satisfied = value === false;
+  if (operator === "EXISTS") satisfied = true;
+
   return {
-    status: knownValues.length === values.length ? "SATISFIED" : "UNKNOWN",
-    supportingFacts: knownValues.map((value) => String(value)),
-    missingFacts: definition.factKeys.filter((factKey, index) => values[index] === undefined || values[index] === null || values[index] === "")
+    status: satisfied ? "ESTABLISHED" : "NOT_ESTABLISHED",
+    supportingFacts: satisfied ? [`${factKey} ${operator}`] : [],
+    missingFacts: satisfied ? [] : [`${factKey} does not satisfy ${operator}`],
+    warnings: []
   };
 }
 
