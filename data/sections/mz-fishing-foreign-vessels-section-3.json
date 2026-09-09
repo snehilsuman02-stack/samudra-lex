@@ -1,0 +1,31 @@
+{
+  "id": "mz-fishing-foreign-vessels-section-3",
+  "actId": "maritime-zones-fishing-foreign-vessels-act-1981",
+  "sectionNumber": "3",
+  "title": "Prohibition of fishing in maritime zones of India by foreign vessels.",
+  "text": "Subject to the provisions of this Act, no foreign vessel shall, except under and in accordance with--\n\n(a) a licence granted under section 4; or\n\n(b) a permit granted under section 5,\n\nby the Central Government, be used for fishing within any maritime zone of India.",
+  "subsections": [],
+  "clauses": [
+    {
+      "number": "(a)",
+      "text": "a licence granted under section 4;"
+    },
+    {
+      "number": "(b)",
+      "text": "a permit granted under section 5,"
+    }
+  ],
+  "relatedOffences": [],
+  "relatedPowers": [],
+  "conditions": [
+    "Subject to the provisions of this Act.",
+    "The foreign vessel must operate under and in accordance with a licence granted under section 4 or a permit granted under section 5 by the Central Government."
+  ],
+  "sourceId": "indiacode-123456789-618688",
+  "source": "India Code, Legislative Department, Ministry of Law and Justice, Government of India",
+  "sourceUrl": "https://indiacode.gov.in/handle/123456789/618688",
+  "lastVerified": "2026-09-09",
+  "status": "VERIFIED_SOURCE",
+  "verified": true,
+  "notes": "Exact statutory text retrieved from the official India Code Section 3 record. This is a legal requirement record source and is not an offence determination."
+}

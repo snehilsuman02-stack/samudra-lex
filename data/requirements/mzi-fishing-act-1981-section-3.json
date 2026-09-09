@@ -1,0 +1,34 @@
+{
+  "id": "mzi-fishing-act-1981-section-3-requirement",
+  "name": "Foreign vessel fishing licence or permit requirement",
+  "description": "Section 3 sets a legal requirement concerning the use of a foreign vessel for fishing within any maritime zone of India. This record does not determine that an offence has occurred.",
+  "actId": "maritime-zones-fishing-foreign-vessels-act-1981",
+  "sectionId": "mz-fishing-foreign-vessels-section-3",
+  "requirements": [
+    "A foreign vessel used for fishing within any maritime zone of India must operate under and in accordance with a licence granted under section 4 or a permit granted under section 5 by the Central Government, subject to the provisions of the Act.",
+    "A licence or permit not being produced is a fact requiring verification; it is not by itself a finding that no valid licence or permit exists.",
+    "The legal question is whether the vessel holds and is operating under a valid applicable licence or permit and is complying with applicable requirements."
+  ],
+  "appliesToScenarios": [
+    "FOREIGN_FISHING_VESSEL"
+  ],
+  "requiredDocuments": [
+    "Licence status: DOCUMENT PRODUCED, DOCUMENT NOT PRODUCED, or DOCUMENT STATUS UNKNOWN",
+    "Licence or permit verification status: DOCUMENT VERIFIED or DOCUMENT VALIDITY NOT VERIFIED"
+  ],
+  "conditions": [
+    "The vessel is foreign.",
+    "The vessel is used for fishing.",
+    "The fishing is within a maritime zone of India; the applicable maritime zone requires separate confirmation.",
+    "The relevant licence or permit must be identified and its validity and applicability verified."
+  ],
+  "exceptions": [
+    "Fishing under and in accordance with a licence granted under section 4.",
+    "Fishing under and in accordance with a permit granted under section 5.",
+    "Subject to the provisions of the Act."
+  ],
+  "sourceId": "indiacode-123456789-618688",
+  "verified": true,
+  "lastVerified": "2026-09-09",
+  "notes": "This record represents a legal requirement only. It does not establish an offence, infer that a licence is invalid, or convert the fact 'licence not produced' into 'no valid licence'."
+}
