@@ -46,8 +46,10 @@ export function assessOffences(facts, scenario, requirements = [], offences = []
       result.establishedOffences.push(assessment);
     } else if (assessment.status === "SUSPECTED / REQUIRES FURTHER VERIFICATION") {
       result.suspectedOffences.push(assessment);
-    } else {
+    } else if (assessment.status === "NOT ESTABLISHED") {
       result.notEstablished.push(assessment);
+    } else {
+      result.insufficientFacts.push(assessment);
     }
   }
 
@@ -94,7 +96,11 @@ function evaluateRequirement(requirement, facts, scenarioIds) {
   const evaluations = requirementDefinitions.map((definition) => evaluateCondition(definition, facts));
   const supportingFacts = evaluations.flatMap((evaluation) => evaluation.supportingFacts);
   const missingFacts = evaluations.flatMap((evaluation) => evaluation.missingFacts);
-  const status = evaluations.every((evaluation) => evaluation.status === "ESTABLISHED") ? "SATISFIED" : "UNKNOWN";
+  const status = evaluations.every((evaluation) => evaluation.status === "ESTABLISHED")
+    ? "SATISFIED"
+    : evaluations.some((evaluation) => evaluation.status === "NOT_ESTABLISHED")
+      ? "NOT_SATISFIED"
+      : "UNKNOWN";
 
   return {
     requirementId: requirement.id || "",
@@ -108,7 +114,24 @@ function evaluateRequirement(requirement, facts, scenarioIds) {
 }
 
 function evaluateOffence(offence, facts, scenarioIds) {
-  const elements = Array.isArray(offence.elements) ? offence.elements.map((element) => evaluateElement(element, facts)) : [];
+  const hasStructuredElements = Array.isArray(offence.elements)
+    && offence.elements.length > 0
+    && offence.elements.some((element) => element && typeof element === "object" && !Array.isArray(element) && element.factKey);
+  if (!hasStructuredElements) {
+    return {
+      offenceId: offence.id || "",
+      name: offence.name || "",
+      status: "UNKNOWN",
+      elements: [],
+      legalBasis: toLegalBasis(offence),
+      warnings: [
+        "Offence contains no structured elements for reliable assessment.",
+        "Offence cannot be established without verified structured legal elements."
+      ]
+    };
+  }
+
+  const elements = offence.elements.map((element) => evaluateElement(element, facts));
   const requiredElements = elements.filter((element) => element.required !== false);
   const establishedCount = requiredElements.filter((element) => element.status === "ESTABLISHED").length;
   const hasNotEstablished = requiredElements.some((element) => element.status === "NOT_ESTABLISHED");
@@ -119,7 +142,7 @@ function evaluateOffence(offence, facts, scenarioIds) {
       ? "NOT ESTABLISHED"
       : establishedCount > 0 && hasUnknown
       ? "SUSPECTED / REQUIRES FURTHER VERIFICATION"
-      : "NOT ESTABLISHED";
+        : "UNKNOWN";
 
   return {
     offenceId: offence.id || "",
