@@ -15,7 +15,9 @@
       "text": "a permit granted under section 5,"
     }
   ],
-  "relatedOffences": [],
+  "relatedOffences": [
+    "mzi-fishing-act-1981-section-10-contravention-section-3"
+  ],
   "relatedPowers": [],
   "conditions": [
     "Subject to the provisions of this Act.",

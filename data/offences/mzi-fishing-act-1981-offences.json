@@ -1,3 +1,62 @@
 {
-  "offences": []
+  "offences": [
+    {
+      "id": "mzi-fishing-act-1981-section-10-contravention-section-3",
+      "name": "Contravention of section 3 by use of a foreign vessel",
+      "description": "Section 10 provides the penalty where a foreign vessel is used in contravention of section 3. The statutory provision identifies the owner or master as the person subject to the penalty and distinguishes penalties by maritime area. This record does not treat a licence or document not being produced as proof of contravention.",
+      "actId": "maritime-zones-fishing-foreign-vessels-act-1981",
+      "sectionId": "mz-fishing-foreign-vessels-section-10",
+      "elements": [
+        {
+          "id": "mzi-s10-element-foreign-vessel",
+          "description": "A foreign vessel is used.",
+          "required": true,
+          "factKey": "nationality",
+          "operator": "EQUALS",
+          "expectedValue": "Foreign"
+        },
+        {
+          "id": "mzi-s10-element-fishing-use",
+          "description": "The foreign vessel is used for fishing.",
+          "required": true,
+          "factKey": "activity",
+          "operator": "CONTAINS",
+          "expectedValue": "fishing"
+        },
+        {
+          "id": "mzi-s10-element-maritime-zone",
+          "description": "The use takes place within a maritime zone of India.",
+          "required": true,
+          "factKey": "location.maritimeZone",
+          "operator": "EXISTS",
+          "expectedValue": ""
+        },
+        {
+          "id": "mzi-s10-element-section-3-contravention",
+          "description": "The use of the foreign vessel is in contravention of section 3, including the applicable licence or permit requirement.",
+          "required": true,
+          "factKey": "",
+          "operator": "",
+          "expectedValue": ""
+        },
+        {
+          "id": "mzi-s10-element-owner-or-master",
+          "description": "The person assessed is the owner or master of the vessel.",
+          "required": true,
+          "factKey": "",
+          "operator": "",
+          "expectedValue": ""
+        }
+      ],
+      "conditions": [
+        "Section 3 prohibits use of a foreign vessel for fishing within any maritime zone of India except under and in accordance with a Central Government licence under section 4 or permit under section 5.",
+        "Section 10 applies to the owner or master where a foreign vessel is used in contravention of section 3.",
+        "The applicable penalty depends on the maritime area stated in section 10."
+      ],
+      "penalty": "Within the territorial waters of India: imprisonment for a term not exceeding three years or fine not exceeding rupees fifteen lakhs or both. Within the exclusive economic zone of India: fine not exceeding rupees ten lakhs.",
+      "sourceId": "indiacode-123456789-618695",
+      "verified": true,
+      "lastVerified": "2026-09-09"
+    }
+  ]
 }
