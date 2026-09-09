@@ -39,6 +39,10 @@ function renderAnalysis(analysis) {
       <p>${escapeHtml(analysis.input)}</p>
     </div>
     <div class="result-block">
+      <h3>FACTS IDENTIFIED</h3>
+      ${renderFacts(analysis.facts)}
+    </div>
+    <div class="result-block">
       <h3>SCENARIO DETECTED</h3>
       ${scenarioMarkup}
       <p class="disclaimer">These categories are operational prompts only. They are not findings of fact or legal conclusions.</p>
@@ -59,6 +63,26 @@ function renderAnalysis(analysis) {
   `;
   results.hidden = false;
   results.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function renderFacts(facts) {
+  const details = [
+    ["Vessel Type", facts.vesselType || "Unknown"],
+    ["Nationality", facts.nationality],
+    ["Activity", facts.activity.length ? facts.activity.map(formatFactValue).join(", ") : "None detected"],
+    ["Distance Mentioned", facts.location.distanceNm === null ? (facts.location.mentioned ? facts.location.text : "None") : `${facts.location.distanceNm} NM`],
+    ["Document Issue", facts.documents.length ? facts.documents.join(", ") : "None detected"],
+    ["Behaviour", facts.behaviour.length ? facts.behaviour.join(", ") : "None detected"]
+  ];
+  const detailsMarkup = details.map(([label, value]) => `<dt>${label}</dt><dd>${escapeHtml(value)}</dd>`).join("");
+  const factList = facts.facts.length
+    ? `<p class="fact-label">FACTS</p><ul class="fact-list">${facts.facts.map((fact) => `<li>${escapeHtml(fact)}</li>`).join("")}</ul>`
+    : "";
+  const uncertaintyList = facts.uncertainties.length
+    ? `<p class="fact-label">UNCERTAINTIES</p><ul class="fact-list uncertainty-list">${facts.uncertainties.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
+    : "";
+
+  return `<dl class="fact-details">${detailsMarkup}</dl>${factList}${uncertaintyList}`;
 }
 
 function renderLegalSource(section) {
@@ -96,6 +120,10 @@ function formatScenarioName(scenario) {
     .split("_")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
+}
+
+function formatFactValue(value) {
+  return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
 function escapeHtml(value) {

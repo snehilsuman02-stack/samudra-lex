@@ -152,6 +152,12 @@ textarea:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(14, 118, 
 .power-record p { margin: 6px 0; color: var(--muted); font-size: .88rem; }
 .power-record .power-description { color: var(--ink); }
 .power-record ul { margin: 6px 0 0; padding-left: 20px; color: var(--muted); font-size: .84rem; }
+.fact-details { display: grid; grid-template-columns: 170px 1fr; gap: 8px 16px; margin: 0; font-size: .88rem; }
+.fact-details dt { color: var(--muted); font-weight: 700; }
+.fact-details dd { margin: 0; }
+.fact-label { margin: 20px 0 6px !important; color: var(--teal-dark) !important; font-size: .72rem !important; font-weight: 700; letter-spacing: .1em; }
+.fact-list { margin: 0; padding-left: 20px; color: var(--muted); font-size: .84rem; }
+.uncertainty-list { color: #705313; }
 
 .site-footer { display: flex; justify-content: space-between; gap: 20px; padding: 0 0 28px; color: var(--muted); font-size: .73rem; }
 .site-footer p { margin: 0; }

@@ -1,4 +1,5 @@
 import { detectScenarios } from "./scenarioEngine.js";
+import { extractFacts } from "./factExtractor.js";
 import {
   loadCoastGuardAct,
   loadCoastGuardSection121,
@@ -12,6 +13,7 @@ export function createEmptyAnalysis(input, detectedScenario = []) {
   return {
     input,
     detectedScenario,
+    facts: extractFacts(input),
     jurisdictionConsiderations: [],
     applicableLaws: [],
     relevantSections: [],
