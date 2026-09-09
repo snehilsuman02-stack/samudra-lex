@@ -94,3 +94,31 @@ async function loadJson(url) {
   if (!response.ok) throw new Error(`Unable to load test offence data: ${url}`);
   return response.json();
 }
+
+if (typeof process !== "undefined" && process.argv[1]?.endsWith("offenceEngine.test.js")) {
+  const nativeFetch = globalThis.fetch;
+  globalThis.fetch = async (url, options) => {
+    if (String(url).startsWith("file:")) {
+      const { readFile } = await import("node:fs/promises");
+      const contents = await readFile(new URL(url), "utf8");
+      return {
+        ok: true,
+        json: async () => JSON.parse(contents)
+      };
+    }
+    return nativeFetch(url, options);
+  };
+
+  runOffenceEngineTests()
+    .then((results) => {
+      results.forEach((result) => {
+        console.log(`${result.name}: ${result.status}`);
+      });
+      console.log("ALL OFFENCE ENGINE TESTS PASSED");
+    })
+    .catch((error) => {
+      console.error("OFFENCE ENGINE TEST FAILED");
+      console.error(error.message);
+      process.exitCode = 1;
+    });
+}
