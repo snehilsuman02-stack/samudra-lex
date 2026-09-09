@@ -10,6 +10,7 @@ export function extractFacts(text) {
   const location = detectLocation(input);
   const documents = detectDocuments(normalized);
   const behaviour = detectBehaviour(normalized);
+  const suspectedIssue = detectSuspectedIssues(normalized);
 
   if (nationality === "Foreign") {
     facts.push("Foreign vessel identified");
@@ -42,6 +43,7 @@ export function extractFacts(text) {
 
   documents.forEach((document) => facts.push(capitalize(document)));
   behaviour.forEach((item) => facts.push(`Behaviour reported: ${item}`));
+  suspectedIssue.forEach((item) => facts.push(item));
 
   if (hasFishingActivity(normalized) && hasUnverifiedLicenceIssue(normalized)) {
     uncertainties.push("Validity/status of fishing licence has not been verified");
@@ -54,10 +56,17 @@ export function extractFacts(text) {
     location,
     documents,
     behaviour,
-    suspectedIssue: [],
+    suspectedIssue,
     facts,
     uncertainties
   };
+}
+
+function detectSuspectedIssues(input) {
+  if (/\breason to believe\b[\s\S]*\b(?:used|committing)\b[\s\S]*\boffence\b/.test(input)) {
+    return ["Reason to believe an offence under the Act is stated by the user"];
+  }
+  return [];
 }
 
 function detectVesselType(input) {

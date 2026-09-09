@@ -29,9 +29,7 @@ function renderAnalysis(analysis) {
         <strong>NO VERIFIED LEGAL BASIS FOUND</strong>
         <p>The current legal database does not contain a verified provision matching this query.</p>
       </div>`;
-  const powerMarkup = analysis.potentialPowers.length
-    ? analysis.potentialPowers.map(renderPotentialPower).join("")
-    : "<p>No verified statutory powers were linked to this result.</p>";
+  const powerMarkup = renderPowerAssessment(analysis.powerAssessment);
 
   resultContent.innerHTML = `
     <div class="result-block">
@@ -56,7 +54,7 @@ function renderAnalysis(analysis) {
       ${legalSourceMarkup}
     </div>
     <div class="result-block">
-      <h3>POTENTIAL STATUTORY POWERS</h3>
+      <h3>LEGAL POWERS ASSESSMENT</h3>
       ${powerMarkup}
     </div>
     ${scenarioDetected ? `<div class="result-block"><h3>WARNING</h3><p class="disclaimer">Scenario classification does not establish that an offence has occurred or that a particular enforcement power is available.</p></div>` : ""}
@@ -104,14 +102,31 @@ function renderLegalSource(section) {
 
 function renderPotentialPower(power) {
   return `<article class="power-record">
-    <h4>Potential statutory power identified</h4>
+    <h4>${escapeHtml(power.assessmentStatus || "Potential statutory power identified")}</h4>
     <p>${escapeHtml(power.powerName)}</p>
     <p class="power-description">${escapeHtml(power.description)}</p>
     <p class="statutory-label">LEGAL BASIS</p>
-    <p class="power-detail">Section ${escapeHtml(power.legalBasis.subsection)} of the Foreign Fishing Vessels Act, 1981.</p>
+    <p class="power-detail">${escapeHtml(power.actName || "Verified Act record")} — Section ${escapeHtml(power.legalBasis.subsection)}.</p>
     <p class="statutory-label">CONDITIONS / LIMITATIONS</p>
     <ul>${[...power.conditions, ...power.limitations].map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+    <p class="power-detail">${escapeHtml(power.assessmentReason || "")}</p>
+    <p class="statutory-label">SOURCE</p>
+    <p class="source-reference">${escapeHtml(power.source)}<br><a href="${escapeHtml(power.sourceUrl)}" target="_blank" rel="noreferrer">Official India Code source</a><br>Last verified: ${escapeHtml(power.lastVerified)}</p>
   </article>`;
+}
+
+function renderPowerAssessment(assessment) {
+  if (!assessment) return "<p>POWER DATA NOT AVAILABLE</p>";
+  const sections = [
+    ["POTENTIALLY RELEVANT POWERS", assessment.applicablePowers],
+    ["CONDITION-DEPENDENT POWERS", assessment.conditionalPowers],
+    ["NOT ESTABLISHED / INSUFFICIENT FACTS", assessment.unavailablePowers]
+  ];
+  const markup = sections.map(([heading, powers]) => `<section class="power-group"><h4>${heading}</h4>${powers.length ? powers.map(renderPotentialPower).join("") : "<p>No powers in this category.</p>"}</section>`).join("");
+  const dataWarning = assessment.warnings.includes("POWER DATA NOT AVAILABLE")
+    ? "<p class=\"power-data-warning\">POWER DATA NOT AVAILABLE</p>"
+    : "";
+  return `${dataWarning}${markup}<div class="legal-caution"><strong>LEGAL CAUTION</strong><p>This assessment identifies statutory provisions potentially relevant to the facts entered by the user. It does not by itself establish that an offence has occurred, that jurisdiction has been established, or that a particular enforcement action must be taken.</p><p>Verify the current law, applicable rules/orders/notifications, delegation or authorisation, jurisdiction and facts before action.</p></div>`;
 }
 
 function formatScenarioName(scenario) {

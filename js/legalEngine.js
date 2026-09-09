@@ -1,12 +1,12 @@
 import { detectScenarios } from "./scenarioEngine.js";
 import { extractFacts } from "./factExtractor.js";
+import { assessLegalPowers } from "./powerEngine.js";
 import {
   loadCoastGuardAct,
   loadCoastGuardSection121,
   loadForeignFishingVesselScenario,
   loadForeignFishingAct,
-  loadForeignFishingSection9,
-  loadForeignFishingSection9Powers
+  loadForeignFishingSection9
 } from "./dataLoader.js";
 
 export function createEmptyAnalysis(input, detectedScenario = []) {
@@ -33,15 +33,14 @@ export async function analyseSituation(userInput) {
   const detectedScenario = detectScenarios(input);
   const analysis = createEmptyAnalysis(input, detectedScenario);
 
-  analysis.legalSources = await searchLegalData(input, detectedScenario);
-  if (analysis.legalSources.some((source) => source.sectionId === "mz-fishing-foreign-vessels-section-9")) {
-    analysis.potentialPowers = await loadForeignFishingSection9Powers();
-  }
+  analysis.legalSources = await searchLegalData(input, detectedScenario, analysis.facts);
+  analysis.powerAssessment = await assessLegalPowers(analysis.facts, detectedScenario);
+  analysis.potentialPowers = analysis.powerAssessment.applicablePowers;
 
   return analysis;
 }
 
-export async function searchLegalData(query, detectedScenario = []) {
+export async function searchLegalData(query, detectedScenario = [], facts = null) {
   const normalizedQuery = normalizeText(query);
   const queryTerms = normalizedQuery.split(" ").filter((term) => term.length >= 3);
 
@@ -60,8 +59,10 @@ export async function searchLegalData(query, detectedScenario = []) {
 
     const sources = [];
     const scenarioLinked = detectedScenario.includes(foreignFishingScenario.id);
-    const section9Terms = ["foreign", "fishing", "authorised", "officer", "maritime", "zones", "section", "arrest", "crew", "seize", "detain", "board", "search"];
-    const section9SearchMatch = queryTerms.some((term) => section9Terms.includes(term));
+    const section9Terms = ["fishing", "authorised", "officer", "maritime", "zones", "section", "arrest", "crew", "seize", "detain", "board", "search"];
+      const fishingFactPresent = facts ? facts.activity.includes("fishing") : !/\b(?:no|not)\s+fishing\b|\bfishing\s+not\s+observed\b/.test(normalizedQuery);
+      const section9SearchMatch = queryTerms.some((term) => section9Terms.includes(term))
+        && (!queryTerms.includes("fishing") || fishingFactPresent);
     if (foreignFishingAct.status === "VERIFIED_SOURCE" && foreignFishingSection.status === "VERIFIED_SOURCE"
       && (scenarioLinked || section9SearchMatch)) {
       sources.push(toLegalSource(foreignFishingAct, foreignFishingSection));
