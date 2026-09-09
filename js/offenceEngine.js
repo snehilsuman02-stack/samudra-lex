@@ -1,3 +1,13 @@
+const FINAL_OFFENCE_STATUS = Object.freeze({
+  ESTABLISHED: "OFFENCE ESTABLISHED",
+  SUSPECTED: "SUSPECTED / REQUIRES FURTHER VERIFICATION",
+  NOT_ESTABLISHED: "NOT ESTABLISHED",
+  UNKNOWN: "UNKNOWN"
+});
+
+// Condition states remain internal; only FINAL_OFFENCE_STATUS values are offence-level results.
+const CONDITION_EVALUATION = Object.freeze({ TRUE: "TRUE", FALSE: "FALSE", UNKNOWN: "UNKNOWN" });
+
 export function assessOffences(facts, scenario, requirements = [], offences = []) {
   const result = {
     assessments: [],
@@ -42,11 +52,11 @@ export function assessOffences(facts, scenario, requirements = [], offences = []
   for (const offence of verifiedOffences) {
     const assessment = evaluateOffence(offence, facts, scenarioIds);
     result.assessments.push(assessment);
-    if (assessment.status === "OFFENCE ESTABLISHED") {
+    if (assessment.status === FINAL_OFFENCE_STATUS.ESTABLISHED) {
       result.establishedOffences.push(assessment);
-    } else if (assessment.status === "SUSPECTED / REQUIRES FURTHER VERIFICATION") {
+    } else if (assessment.status === FINAL_OFFENCE_STATUS.SUSPECTED) {
       result.suspectedOffences.push(assessment);
-    } else if (assessment.status === "NOT ESTABLISHED") {
+    } else if (assessment.status === FINAL_OFFENCE_STATUS.NOT_ESTABLISHED) {
       result.notEstablished.push(assessment);
     } else {
       result.insufficientFacts.push(assessment);
@@ -161,12 +171,12 @@ function evaluateOffence(offence, facts, scenarioIds) {
   const hasEvaluableRequirements = requiredElements.length > 0 || hasGroups;
   const status = !hasMalformedGroup && !hasNotEstablished && !hasUnknown && hasEvaluableRequirements
     && (!hasGroups || groupResults.every((group) => group.status === "ESTABLISHED"))
-    ? "OFFENCE ESTABLISHED"
+      ? FINAL_OFFENCE_STATUS.ESTABLISHED
     : hasNotEstablished
-      ? "NOT ESTABLISHED"
+      ? FINAL_OFFENCE_STATUS.NOT_ESTABLISHED
       : !hasMalformedGroup && hasUnknown
-        ? "SUSPECTED / REQUIRES FURTHER VERIFICATION"
-        : "UNKNOWN";
+        ? FINAL_OFFENCE_STATUS.SUSPECTED
+        : FINAL_OFFENCE_STATUS.UNKNOWN;
   const decisionTrace = [
     ...elements.map((element) => ({
       conditionId: element.elementId,
@@ -207,7 +217,7 @@ function evaluateOffence(offence, facts, scenarioIds) {
     warnings: [
       ...elements.flatMap((element) => element.warnings || []),
       ...groupResults.flatMap((group) => group.warnings || []),
-      ...(status === "OFFENCE ESTABLISHED" ? [] : ["Offence status requires verification against all legal elements and facts."])
+      ...(status === FINAL_OFFENCE_STATUS.ESTABLISHED ? [] : ["Offence status requires verification against all legal elements and facts."])
     ]
   };
 }
@@ -221,7 +231,7 @@ function evaluateAlternativeGroups(groups, elementById) {
       elementIds: [],
       description: "Malformed alternative group",
       alternatives: [],
-      evaluation: "UNKNOWN",
+      evaluation: CONDITION_EVALUATION.UNKNOWN,
       reason: "The alternative group structure could not be evaluated.",
       malformed: true,
       warnings: ["Alternative group is malformed and cannot be assessed reliably."]
@@ -279,7 +289,7 @@ function evaluateElement(element, facts) {
       element: typeof element === "string" ? element : "",
       required: true,
       status: "UNKNOWN",
-      evaluation: "UNKNOWN",
+      evaluation: CONDITION_EVALUATION.UNKNOWN,
       inputValue: undefined,
       evidenceStatus: "EVIDENCE NOT PROVIDED",
       supportingFacts: [],
@@ -307,7 +317,7 @@ function evaluateCondition(condition, facts) {
   if (!factKey || !supportedOperator || (expectedValueRequired && (condition.expectedValue === undefined || condition.expectedValue === ""))) {
     return {
       status: "UNKNOWN",
-      evaluation: "UNKNOWN",
+      evaluation: CONDITION_EVALUATION.UNKNOWN,
       inputValue: undefined,
       evidenceStatus: "EVIDENCE NOT PROVIDED",
       supportingFacts: [],
@@ -348,7 +358,7 @@ function evaluateCondition(condition, facts) {
   const status = satisfied ? "ESTABLISHED" : "NOT_ESTABLISHED";
   return {
     status,
-    evaluation: satisfied ? "TRUE" : "FALSE",
+    evaluation: satisfied ? CONDITION_EVALUATION.TRUE : CONDITION_EVALUATION.FALSE,
     inputValue: value,
     evidenceStatus: satisfied ? "FACT CONFIRMED" : "FACT DISPROVED",
     supportingFacts: satisfied ? [`${factKey} ${operator}`] : [],

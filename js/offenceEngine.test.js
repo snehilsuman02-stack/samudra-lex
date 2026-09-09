@@ -177,6 +177,54 @@ export async function runOffenceEngineTests() {
   }
   results.push({ name: "alternative false plus unknown", status: falseUnknownAlternative.status });
 
+  const allUnknown = assessOffences(
+    {},
+    [],
+    [],
+    [{
+      id: "all-unknown-offence",
+      verified: true,
+      actId: "trace-act",
+      sectionId: "trace-section",
+      sourceId: "trace-source",
+      elements: [
+        { id: "unknown-a", description: "Unknown A", required: true, factKey: "missingA", operator: "EXISTS", expectedValue: "" },
+        { id: "unknown-b", description: "Unknown B", required: true, factKey: "missingB", operator: "EXISTS", expectedValue: "" }
+      ]
+    }]
+  ).assessments[0];
+  if (allUnknown.status !== "SUSPECTED / REQUIRES FURTHER VERIFICATION"
+    || allUnknown.verificationRequired.length !== 2
+    || !/missingA|unknown/i.test(allUnknown.reason)) {
+    throw new Error("all unknown mandatory conditions should be suspected with targeted verification");
+  }
+  results.push({ name: "all unknown mandatory conditions", status: allUnknown.status });
+
+  const falseJurisdiction = assessOffences(
+    { location: { maritimeZone: "EEZ" } },
+    [],
+    [],
+    [{
+      id: "false-jurisdiction-offence",
+      verified: true,
+      actId: "trace-act",
+      sectionId: "trace-section",
+      sourceId: "trace-source",
+      elements: [{ id: "zone", description: "Territorial waters", required: true, factKey: "location.maritimeZone", operator: "EQUALS", expectedValue: "territorial_waters" }]
+    }]
+  ).assessments[0];
+  if (falseJurisdiction.status !== "NOT ESTABLISHED"
+    || !/does not satisfy|false/i.test(falseJurisdiction.reason)
+    || falseJurisdiction.verificationRequired.length !== 0) {
+    throw new Error("false jurisdiction should be not established without verification tasks");
+  }
+  results.push({ name: "false jurisdiction", status: falseJurisdiction.status });
+
+  const finalStatuses = new Set(["OFFENCE ESTABLISHED", "SUSPECTED / REQUIRES FURTHER VERIFICATION", "NOT ESTABLISHED", "UNKNOWN"]);
+  if (results.filter((result) => !result.name.startsWith("role")).some((result) => !finalStatuses.has(result.status))) {
+    throw new Error("final offence status vocabulary is not canonical");
+  }
+
   return results;
 }
 
