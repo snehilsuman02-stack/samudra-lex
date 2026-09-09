@@ -52,6 +52,28 @@ export async function runOffenceEngineTests() {
     return { name: test.name, status: actual, uncertainties: assessment.uncertainties };
   });
 
+  const roleTests = [
+    ["role master", "master", "ESTABLISHED"],
+    ["role owner", "owner", "ESTABLISHED"],
+    ["role crew", "crew", "NOT_ESTABLISHED"],
+    ["role absent", undefined, "UNKNOWN"]
+  ];
+  for (const [name, role, expected] of roleTests) {
+    const roleFacts = facts({
+      nationality: "Foreign",
+      activity: ["fishing"],
+      location: { maritimeZone: "territorial_waters" },
+      legal: { section3Contravention: true },
+      person: role === undefined ? {} : { role }
+    });
+    const assessment = assessOffences(roleFacts, ["FOREIGN_FISHING_VESSEL"], [], [offence]);
+    const element = assessment.assessments[0]?.elements.find((item) => item.elementId === "mzi-s10-element-owner-or-master");
+    if (element?.status !== expected) {
+      throw new Error(`${name}: expected ${expected}, received ${element?.status}`);
+    }
+    results.push({ name, status: element.status });
+  }
+
   return results;
 }
 
