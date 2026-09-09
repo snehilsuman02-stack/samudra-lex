@@ -109,7 +109,15 @@ function evaluateRequirement(requirement, facts, scenarioIds) {
     supportingFacts,
     missingFacts,
     legalBasis,
-    warnings: status === "SATISFIED" ? [] : ["Requirement status requires further structured factual verification."]
+    warnings: status === "SATISFIED" ? [] : ["Requirement status requires further structured factual verification."],
+    decisionTrace: evaluations.map((evaluation, index) => ({
+      conditionId: requirementDefinitions[index].id || `requirement-${index + 1}`,
+      description: requirementDefinitions[index].description || requirementDefinitions[index].name || "Requirement condition",
+      inputValue: evaluation.inputValue,
+      evaluation: evaluation.evaluation,
+      status: evaluation.status,
+      reason: evaluation.reason
+    }))
   };
 }
 
@@ -123,6 +131,9 @@ function evaluateOffence(offence, facts, scenarioIds) {
       name: offence.name || "",
       status: "UNKNOWN",
       elements: [],
+      decisionTrace: [],
+      verificationRequired: [],
+      reason: "Insufficient structured legal elements are available for assessment.",
       legalBasis: toLegalBasis(offence),
       warnings: [
         "Offence contains no structured elements for reliable assessment.",
@@ -143,17 +154,43 @@ function evaluateOffence(offence, facts, scenarioIds) {
   const hasUnknown = coreHasUnknown || groupHasUnknown;
   const hasNotEstablished = coreHasNotEstablished || groupHasNotEstablished;
   const hasGroups = Array.isArray(offence.alternativeGroups) && offence.alternativeGroups.length > 0;
+  const hasMalformedGroup = groupResults.some((group) => group.malformed);
   const hasRelevantEstablished = hasGroups
     ? groupResults.some((group) => group.status === "ESTABLISHED")
     : requiredElements.some((element) => element.status === "ESTABLISHED");
-  const status = !hasNotEstablished && !hasUnknown && requiredElements.length > 0
+  const hasEvaluableRequirements = requiredElements.length > 0 || hasGroups;
+  const status = !hasMalformedGroup && !hasNotEstablished && !hasUnknown && hasEvaluableRequirements
     && (!hasGroups || groupResults.every((group) => group.status === "ESTABLISHED"))
     ? "OFFENCE ESTABLISHED"
     : hasNotEstablished
       ? "NOT ESTABLISHED"
-      : hasUnknown && hasRelevantEstablished
+      : !hasMalformedGroup && hasUnknown
         ? "SUSPECTED / REQUIRES FURTHER VERIFICATION"
         : "UNKNOWN";
+  const decisionTrace = [
+    ...elements.map((element) => ({
+      conditionId: element.elementId,
+      description: element.element,
+      inputValue: element.inputValue,
+      evaluation: element.evaluation,
+      status: element.status,
+      reason: element.reason,
+      evidenceStatus: element.evidenceStatus
+    })),
+    ...groupResults.map((group) => ({
+      conditionId: group.id,
+      description: group.description,
+      inputValue: group.alternatives,
+      evaluation: group.evaluation,
+      status: group.status,
+      reason: group.reason,
+      alternatives: group.alternatives
+    }))
+  ];
+  const verificationRequired = status === "SUSPECTED / REQUIRES FURTHER VERIFICATION"
+    ? buildVerificationRequired(elements, groupResults)
+    : [];
+  const reason = buildAssessmentReason(status, elements, groupResults);
 
   return {
     offenceId: offence.id || "",
@@ -161,6 +198,11 @@ function evaluateOffence(offence, facts, scenarioIds) {
     status,
     elements,
     alternativeGroups: groupResults,
+    decisionTrace,
+    conditionsSatisfied: decisionTrace.filter((entry) => entry.status === "ESTABLISHED"),
+    conditionsNotSatisfied: decisionTrace.filter((entry) => entry.status === "NOT_ESTABLISHED"),
+    verificationRequired,
+    reason,
     legalBasis: toLegalBasis(offence),
     warnings: [
       ...elements.flatMap((element) => element.warnings || []),
@@ -177,6 +219,11 @@ function evaluateAlternativeGroups(groups, elementById) {
       id: "",
       status: "UNKNOWN",
       elementIds: [],
+      description: "Malformed alternative group",
+      alternatives: [],
+      evaluation: "UNKNOWN",
+      reason: "The alternative group structure could not be evaluated.",
+      malformed: true,
       warnings: ["Alternative group is malformed and cannot be assessed reliably."]
     }];
   }
@@ -189,6 +236,11 @@ function evaluateAlternativeGroups(groups, elementById) {
         id: group?.id || "",
         status: "UNKNOWN",
         elementIds,
+        description: group?.description || "Alternative group",
+        alternatives: [],
+        evaluation: "UNKNOWN",
+        reason: "The alternative group is malformed or references missing elements.",
+        malformed: true,
         warnings: ["Alternative group is malformed or references missing element IDs; automatic offence assessment is blocked."]
       };
     }
@@ -196,10 +248,25 @@ function evaluateAlternativeGroups(groups, elementById) {
     const alternatives = elementIds.map((elementId) => elementById.get(elementId));
     const hasEstablished = alternatives.some((element) => element.status === "ESTABLISHED");
     const hasUnknown = alternatives.some((element) => element.status === "UNKNOWN");
+    const status = hasEstablished ? "ESTABLISHED" : hasUnknown ? "UNKNOWN" : "NOT_ESTABLISHED";
     return {
       id: group.id || "",
-      status: hasEstablished ? "ESTABLISHED" : hasUnknown ? "UNKNOWN" : "NOT_ESTABLISHED",
+      status,
       elementIds,
+      description: group.description || "Alternative group",
+      alternatives: alternatives.map((element) => ({
+        conditionId: element.elementId,
+        description: element.element,
+        evaluation: element.evaluation,
+        status: element.status,
+        reason: element.reason
+      })),
+      evaluation: status === "ESTABLISHED" ? "TRUE" : status === "NOT_ESTABLISHED" ? "FALSE" : "UNKNOWN",
+      reason: hasEstablished
+        ? "At least one alternative condition is satisfied."
+        : hasUnknown
+          ? "No alternative is satisfied yet; at least one alternative requires verification."
+          : "All alternatives were evaluated as false.",
       warnings: []
     };
   });
@@ -212,17 +279,22 @@ function evaluateElement(element, facts) {
       element: typeof element === "string" ? element : "",
       required: true,
       status: "UNKNOWN",
+      evaluation: "UNKNOWN",
+      inputValue: undefined,
+      evidenceStatus: "EVIDENCE NOT PROVIDED",
       supportingFacts: [],
       missingFacts: [],
+      reason: "The element is not sufficiently structured for reliable assessment.",
       warnings: ["Offence element is not sufficiently structured for reliable assessment."]
     };
   }
 
+  const condition = evaluateCondition(element, facts);
   return {
     elementId: element.id || "",
     element: element.description || "",
     required: element.required !== false,
-    ...evaluateCondition(element, facts)
+    ...condition
   };
 }
 
@@ -235,8 +307,12 @@ function evaluateCondition(condition, facts) {
   if (!factKey || !supportedOperator || (expectedValueRequired && (condition.expectedValue === undefined || condition.expectedValue === ""))) {
     return {
       status: "UNKNOWN",
+      evaluation: "UNKNOWN",
+      inputValue: undefined,
+      evidenceStatus: "EVIDENCE NOT PROVIDED",
       supportingFacts: [],
       missingFacts: [],
+      reason: "The condition is not sufficiently structured for reliable assessment.",
       warnings: ["Offence element is not sufficiently structured for reliable assessment."]
     };
   }
@@ -244,7 +320,16 @@ function evaluateCondition(condition, facts) {
   const value = readFact(facts, factKey);
   const exists = value !== undefined && value !== null && value !== "";
   if (!exists) {
-    return { status: "UNKNOWN", supportingFacts: [], missingFacts: [factKey], warnings: [] };
+    return {
+      status: "UNKNOWN",
+      evaluation: "UNKNOWN",
+      inputValue: value,
+      evidenceStatus: "EVIDENCE NOT PROVIDED",
+      supportingFacts: [],
+      missingFacts: [factKey],
+      reason: `${factKey} is unknown or has not been provided.`,
+      warnings: []
+    };
   }
 
   let satisfied = false;
@@ -260,12 +345,57 @@ function evaluateCondition(condition, facts) {
   if (operator === "FALSE") satisfied = value === false;
   if (operator === "EXISTS") satisfied = true;
 
+  const status = satisfied ? "ESTABLISHED" : "NOT_ESTABLISHED";
   return {
-    status: satisfied ? "ESTABLISHED" : "NOT_ESTABLISHED",
+    status,
+    evaluation: satisfied ? "TRUE" : "FALSE",
+    inputValue: value,
+    evidenceStatus: satisfied ? "FACT CONFIRMED" : "FACT DISPROVED",
     supportingFacts: satisfied ? [`${factKey} ${operator}`] : [],
     missingFacts: satisfied ? [] : [`${factKey} does not satisfy ${operator}`],
+    reason: satisfied
+      ? `${factKey} satisfies the required condition.`
+      : `${factKey} does not satisfy the required condition.`,
     warnings: []
   };
+}
+
+function buildVerificationRequired(elements, groups) {
+  const groupedElementIds = new Set(groups.flatMap((group) => group.elementIds || []));
+  const unresolved = elements.filter((element) => element.status === "UNKNOWN" && !groupedElementIds.has(element.elementId));
+  const groupUnresolved = groups.filter((group) => group.status === "UNKNOWN");
+  const items = unresolved.map((element) => ({
+    conditionId: element.elementId,
+    action: verificationAction(element.inputValue, element.element)
+  }));
+  groupUnresolved.forEach((group) => {
+    group.alternatives.filter((alternative) => alternative.status === "UNKNOWN").forEach((alternative) => {
+      if (!items.some((item) => item.conditionId === alternative.conditionId)) {
+        items.push({
+          conditionId: alternative.conditionId,
+          action: verificationAction(undefined, alternative.description)
+        });
+      }
+    });
+  });
+  return items;
+}
+
+function verificationAction(inputValue, description) {
+  if (/maritime zone|geographical|position/i.test(description)) return "Verify the vessel's applicable maritime zone.";
+  if (/licence|permit/i.test(description)) return "Verify the relevant licence or permit status.";
+  if (/authorised officer/i.test(description)) return "Verify the authorised officer status and recorded requirement.";
+  if (/role|owner|master/i.test(description)) return "Verify the assessed person's role.";
+  return `Verify the unresolved condition: ${description || "required fact"}.`;
+}
+
+function buildAssessmentReason(status, elements, groups) {
+  if (status === "OFFENCE ESTABLISHED") return "All mandatory conditions required for this offence are established.";
+  const failed = [...elements.filter((element) => element.status === "NOT_ESTABLISHED"), ...groups.filter((group) => group.status === "NOT_ESTABLISHED")];
+  if (status === "NOT ESTABLISHED") return `${failed[0]?.reason || "A required condition is established as false."}`;
+  const unknown = [...elements.filter((element) => element.status === "UNKNOWN"), ...groups.filter((group) => group.status === "UNKNOWN")];
+  if (status === "SUSPECTED / REQUIRES FURTHER VERIFICATION") return `The offence has relevant established conditions, but ${unknown[0]?.reason || "one or more mandatory conditions require verification."}`;
+  return "Insufficient structured facts are available to determine whether the offence conditions are satisfied.";
 }
 
 function toLegalBasis(record) {

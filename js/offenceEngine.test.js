@@ -81,7 +81,7 @@ export async function runOffenceEngineTests() {
     ["section 15 failure to stop", { legal: { authorisedOfficer: true, authorisedOfficerRequirement: true, section15Conduct: { failureToStop: true } } }, "OFFENCE ESTABLISHED"],
     ["section 15 obstruction", { legal: { authorisedOfficer: true, authorisedOfficerRequirement: true, section15Conduct: { obstruction: true } } }, "OFFENCE ESTABLISHED"],
     ["section 15 no officer requirement", { legal: { authorisedOfficer: true, authorisedOfficerRequirement: false, section15Conduct: { failureToProduceLicence: true } } }, "NOT ESTABLISHED"],
-    ["section 15 unknown conduct", { legal: { authorisedOfficer: true, authorisedOfficerRequirement: true } }, "UNKNOWN"],
+    ["section 15 unknown conduct", { legal: { authorisedOfficer: true, authorisedOfficerRequirement: true } }, "SUSPECTED / REQUIRES FURTHER VERIFICATION"],
     ["section 15 all conduct false", { legal: { authorisedOfficer: true, authorisedOfficerRequirement: true, section15Conduct: { obstruction: false, facilitiesOrSecurityFailure: false, failureToStop: false, failureToProduceLicence: false, failureToProducePermit: false, failureToProduceLogBook: false, failureToProduceOtherDocument: false, failureToProduceFish: false, failureToProduceNet: false, failureToProduceFishingGearOrEquipment: false } } }, "NOT ESTABLISHED"]
   ];
   for (const [name, values, expected] of section15Tests) {
@@ -107,6 +107,75 @@ export async function runOffenceEngineTests() {
     throw new Error("section 15 malformed alternative group should warn and block establishment");
   }
   results.push({ name: "section 15 malformed alternative group", status: malformedAssessment.assessments[0].status });
+
+  const traceOffence = {
+    id: "trace-offence",
+    verified: true,
+    actId: "trace-act",
+    sectionId: "trace-section",
+    sourceId: "trace-source",
+    elements: [
+      { id: "true-condition", description: "Confirmed condition", required: true, factKey: "confirmed", operator: "TRUE", expectedValue: "" },
+      { id: "unknown-condition", description: "Unresolved condition", required: true, factKey: "missing", operator: "EXISTS", expectedValue: "" }
+    ]
+  };
+  const traceAssessment = assessOffences({ confirmed: true }, [], [], [traceOffence]).assessments[0];
+  if (traceAssessment.status !== "SUSPECTED / REQUIRES FURTHER VERIFICATION"
+    || traceAssessment.decisionTrace.length !== 2
+    || traceAssessment.verificationRequired.length !== 1
+    || traceAssessment.decisionTrace[1].evaluation !== "UNKNOWN"
+    || !traceAssessment.reason) {
+    throw new Error("decision trace or verification workflow did not capture the unresolved condition");
+  }
+  results.push({ name: "decision trace and verification workflow", status: traceAssessment.status });
+
+  const alternativeTrace = assessOffences(
+    { first: false, second: true },
+    [],
+    [],
+    [{
+      id: "alternative-trace-offence",
+      verified: true,
+      actId: "trace-act",
+      sectionId: "trace-section",
+      sourceId: "trace-source",
+      elements: [
+        { id: "alternative-a", description: "Alternative A", required: false, alternativeGroup: "any", factKey: "first", operator: "TRUE", expectedValue: "" },
+        { id: "alternative-b", description: "Alternative B", required: false, alternativeGroup: "any", factKey: "second", operator: "TRUE", expectedValue: "" }
+      ],
+      alternativeGroups: [{ id: "any", description: "Any alternative", operator: "ANY", elementIds: ["alternative-a", "alternative-b"] }]
+    }]
+  ).assessments[0];
+  if (alternativeTrace.status !== "OFFENCE ESTABLISHED"
+    || alternativeTrace.alternativeGroups[0].alternatives[1].status !== "ESTABLISHED"
+    || alternativeTrace.alternativeGroups[0].alternatives[0].status !== "NOT_ESTABLISHED") {
+    throw new Error("alternative group decision trace did not identify the successful alternative");
+  }
+  results.push({ name: "alternative group decision trace", status: alternativeTrace.status });
+
+  const falseUnknownAlternative = assessOffences(
+    { first: false },
+    [],
+    [],
+    [{
+      id: "false-unknown-alternative-offence",
+      verified: true,
+      actId: "trace-act",
+      sectionId: "trace-section",
+      sourceId: "trace-source",
+      elements: [
+        { id: "false-alternative", description: "False alternative", required: false, alternativeGroup: "false-unknown", factKey: "first", operator: "TRUE", expectedValue: "" },
+        { id: "unknown-alternative", description: "Unknown alternative", required: false, alternativeGroup: "false-unknown", factKey: "missing", operator: "TRUE", expectedValue: "" }
+      ],
+      alternativeGroups: [{ id: "false-unknown", description: "False or unknown alternative", operator: "ANY", elementIds: ["false-alternative", "unknown-alternative"] }]
+    }]
+  ).assessments[0];
+  if (falseUnknownAlternative.status !== "SUSPECTED / REQUIRES FURTHER VERIFICATION"
+    || falseUnknownAlternative.verificationRequired.length !== 1
+    || falseUnknownAlternative.verificationRequired[0].conditionId !== "unknown-alternative") {
+    throw new Error("false plus unknown alternative group should require verification only for the unknown alternative");
+  }
+  results.push({ name: "alternative false plus unknown", status: falseUnknownAlternative.status });
 
   return results;
 }
