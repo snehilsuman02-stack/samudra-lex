@@ -1,0 +1,28 @@
+{
+  "_schemaOnly": true,
+  "_exampleOnly": true,
+  "_description": "Schema example only. No real procedure or operational direction is included.",
+  "procedure": {
+    "id": "example-procedure-id",
+    "name": "Example procedure (placeholder)",
+    "steps": [
+      "[EXAMPLE ONLY - verified step goes here]"
+    ],
+    "conditions": [
+      "[EXAMPLE ONLY - verified condition goes here]"
+    ],
+    "evidence": [
+      "[EXAMPLE ONLY - evidence consideration goes here]"
+    ],
+    "escalation": [
+      "[EXAMPLE ONLY - verified escalation path goes here]"
+    ],
+    "sources": [
+      {
+        "id": "example-source-id",
+        "title": "Example source placeholder",
+        "url": "https://example.invalid/source"
+      }
+    ]
+  }
+}

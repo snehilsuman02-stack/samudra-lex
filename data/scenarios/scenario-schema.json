@@ -1,0 +1,23 @@
+{
+  "_schemaOnly": true,
+  "_exampleOnly": true,
+  "_description": "Schema example only. This is an operational classification and not a legal conclusion.",
+  "scenario": {
+    "id": "example-scenario-id",
+    "name": "Example maritime situation (placeholder)",
+    "description": "[EXAMPLE ONLY - generic situation description goes here]",
+    "keywords": [
+      "example keyword",
+      "placeholder term"
+    ],
+    "relatedActs": [
+      "example-act-id"
+    ],
+    "relatedPowers": [
+      "example-power-id"
+    ],
+    "warnings": [
+      "Scenario detection is not a finding of fact or a legal conclusion."
+    ]
+  }
+}

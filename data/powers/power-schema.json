@@ -1,0 +1,24 @@
+{
+  "_schemaOnly": true,
+  "_exampleOnly": true,
+  "_description": "Schema example only. No actual legal power is defined.",
+  "power": {
+    "id": "example-power-id",
+    "powerName": "Example operational power (placeholder)",
+    "description": "[EXAMPLE ONLY - no legal power is described by this record]",
+    "legalBasis": [
+      {
+        "actId": "example-act-id",
+        "sectionId": "example-section-id",
+        "status": "UNVERIFIED_EXAMPLE"
+      }
+    ],
+    "conditions": [
+      "[EXAMPLE ONLY - verified condition goes here]"
+    ],
+    "limitations": [
+      "[EXAMPLE ONLY - verified limitation goes here]"
+    ],
+    "source": "Example source placeholder"
+  }
+}
