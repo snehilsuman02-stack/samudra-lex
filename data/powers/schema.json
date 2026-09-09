@@ -1,0 +1,11 @@
+{
+  "_schemaOnly": true,
+  "_description": "Placeholder schema. No verified legal powers are included.",
+  "power": {
+    "id": "",
+    "label": "",
+    "sourceSectionIds": [],
+    "conditions": [],
+    "limitations": []
+  }
+}

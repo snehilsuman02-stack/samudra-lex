@@ -1,0 +1,11 @@
+{
+  "_schemaOnly": true,
+  "_description": "Placeholder schema. No verified legal content is included.",
+  "act": {
+    "id": "",
+    "title": "",
+    "jurisdiction": "",
+    "sections": [],
+    "sources": []
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "_schemaOnly": true,
+  "_description": "Operational scenario schema only. It is not legal analysis.",
+  "scenario": {
+    "id": "",
+    "label": "",
+    "description": "",
+    "linkedSections": []
+  }
+}

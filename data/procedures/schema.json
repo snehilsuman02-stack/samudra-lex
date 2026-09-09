@@ -1,0 +1,10 @@
+{
+  "_schemaOnly": true,
+  "_description": "Placeholder schema. No verified procedures are included.",
+  "procedure": {
+    "id": "",
+    "label": "",
+    "steps": [],
+    "sourceIds": []
+  }
+}

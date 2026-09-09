@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="SAMUDRA-LEX maritime law-enforcement decision-support foundation">
+  <title>SAMUDRA-LEX | Maritime Law-Enforcement Support</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="index.html" aria-label="SAMUDRA-LEX home">
+        <span class="brand-mark" aria-hidden="true">SL</span>
+        <span>
+          <strong>SAMUDRA-LEX</strong>
+          <small>MARITIME LAW-ENFORCEMENT SUPPORT</small>
+        </span>
+      </a>
+      <div class="status-indicator" aria-label="Application status">
+        <span class="status-dot" aria-hidden="true"></span>
+        FOUNDATION MODE
+      </div>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <section class="intro" aria-labelledby="page-title">
+      <p class="eyebrow">Operational situation analysis</p>
+      <h1 id="page-title">Describe the situation</h1>
+      <p class="intro-copy">Record the facts as they are currently known. SAMUDRA-LEX will identify possible operational scenario categories and check the available verified legal data.</p>
+    </section>
+
+    <section class="analysis-panel" aria-labelledby="input-heading">
+      <div class="panel-heading">
+        <div>
+          <p class="section-label">01 / Situation input</p>
+          <h2 id="input-heading">What is happening?</h2>
+        </div>
+        <span class="input-hint">Use observable facts</span>
+      </div>
+      <form id="analysis-form">
+        <label class="sr-only" for="situation-input">Describe the maritime law-enforcement situation</label>
+        <textarea id="situation-input" name="situation" rows="8" placeholder="Describe the situation, vessel, location, activity and suspected issue..." required></textarea>
+        <div class="form-footer">
+          <p class="example-text"><span>Example</span> Foreign fishing vessel detected approximately 35 NM offshore. The vessel appears to be engaged in fishing and is unable to produce the required documents.</p>
+          <button class="primary-button" type="submit">Analyse situation <span aria-hidden="true">&#8594;</span></button>
+        </div>
+      </form>
+    </section>
+
+    <section id="results" class="results-panel" aria-live="polite" hidden>
+      <div class="results-heading">
+        <div>
+          <p class="section-label">02 / Initial assessment</p>
+          <h2>Analysis result</h2>
+        </div>
+        <button id="new-analysis" class="text-button" type="button">New analysis <span aria-hidden="true">&#8599;</span></button>
+      </div>
+      <div id="result-content"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Foundation version 0.1.0</p>
+    <p>Not a substitute for verified legal advice or operational orders.</p>
+  </footer>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
