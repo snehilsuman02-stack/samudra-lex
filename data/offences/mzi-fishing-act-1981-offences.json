@@ -60,6 +60,155 @@
       "sourceId": "indiacode-123456789-618695",
       "verified": true,
       "lastVerified": "2026-09-09"
+    },
+    {
+      "id": "mzi-fishing-act-1981-section-15-obstruction-authorised-officer",
+      "name": "Penalty for obstruction of authorised officers.",
+      "description": "Section 15 applies where a person intentionally obstructs an authorised officer, fails to afford the required facilities or security, or fails to stop or produce specified items when required to do so by the authorised officer. The alternative conduct forms are preserved separately and must not be treated as simultaneously required.",
+      "actId": "maritime-zones-fishing-foreign-vessels-act-1981",
+      "sectionId": "mz-fishing-foreign-vessels-section-15",
+      "elements": [
+        {
+          "id": "mzi-s15-element-authorised-officer",
+          "description": "An authorised officer is exercising powers conferred under the Act.",
+          "required": true,
+          "factKey": "legal.authorisedOfficer",
+          "operator": "TRUE",
+          "expectedValue": ""
+        },
+        {
+          "id": "mzi-s15-element-officer-requirement",
+          "description": "The relevant requirement or direction was made by the authorised officer under the Act.",
+          "required": true,
+          "factKey": "legal.authorisedOfficerRequirement",
+          "operator": "TRUE",
+          "expectedValue": ""
+        },
+        {
+          "id": "mzi-s15-element-obstruction",
+          "description": "The person intentionally obstructs the authorised officer in the exercise of powers conferred under the Act.",
+          "required": false,
+          "alternativeGroup": "section15-conduct",
+          "factKey": "legal.section15Conduct.obstruction",
+          "operator": "TRUE",
+          "expectedValue": ""
+        },
+        {
+          "id": "mzi-s15-element-facilities-security",
+          "description": "The person fails to afford reasonable facilities to the authorised officer or assistants to board the vessel or fails to provide adequate security at the relevant time.",
+          "required": false,
+          "alternativeGroup": "section15-conduct",
+          "factKey": "legal.section15Conduct.facilitiesOrSecurityFailure",
+          "operator": "TRUE",
+          "expectedValue": ""
+        },
+        {
+          "id": "mzi-s15-element-failure-stop",
+          "description": "The person fails to stop the vessel when required to do so by the authorised officer.",
+          "required": false,
+          "alternativeGroup": "section15-conduct",
+          "factKey": "legal.section15Conduct.failureToStop",
+          "operator": "TRUE",
+          "expectedValue": ""
+        },
+        {
+          "id": "mzi-s15-element-failure-licence",
+          "description": "The person fails to produce the licence when required to do so by the authorised officer.",
+          "required": false,
+          "alternativeGroup": "section15-conduct",
+          "factKey": "legal.section15Conduct.failureToProduceLicence",
+          "operator": "TRUE",
+          "expectedValue": ""
+        },
+        {
+          "id": "mzi-s15-element-failure-permit",
+          "description": "The person fails to produce the permit when required to do so by the authorised officer.",
+          "required": false,
+          "alternativeGroup": "section15-conduct",
+          "factKey": "legal.section15Conduct.failureToProducePermit",
+          "operator": "TRUE",
+          "expectedValue": ""
+        },
+        {
+          "id": "mzi-s15-element-failure-logbook",
+          "description": "The person fails to produce the log book when required to do so by the authorised officer.",
+          "required": false,
+          "alternativeGroup": "section15-conduct",
+          "factKey": "legal.section15Conduct.failureToProduceLogBook",
+          "operator": "TRUE",
+          "expectedValue": ""
+        },
+        {
+          "id": "mzi-s15-element-failure-document",
+          "description": "The person fails to produce another required vessel document when required to do so by the authorised officer.",
+          "required": false,
+          "alternativeGroup": "section15-conduct",
+          "factKey": "legal.section15Conduct.failureToProduceOtherDocument",
+          "operator": "TRUE",
+          "expectedValue": ""
+        },
+        {
+          "id": "mzi-s15-element-failure-fish",
+          "description": "The person fails to produce fish on board the vessel when required to do so by the authorised officer.",
+          "required": false,
+          "alternativeGroup": "section15-conduct",
+          "factKey": "legal.section15Conduct.failureToProduceFish",
+          "operator": "TRUE",
+          "expectedValue": ""
+        },
+        {
+          "id": "mzi-s15-element-failure-net",
+          "description": "The person fails to produce a net on board the vessel when required to do so by the authorised officer.",
+          "required": false,
+          "alternativeGroup": "section15-conduct",
+          "factKey": "legal.section15Conduct.failureToProduceNet",
+          "operator": "TRUE",
+          "expectedValue": ""
+        },
+        {
+          "id": "mzi-s15-element-failure-gear-equipment",
+          "description": "The person fails to produce fishing gear or other equipment on board the vessel when required to do so by the authorised officer.",
+          "required": false,
+          "alternativeGroup": "section15-conduct",
+          "factKey": "legal.section15Conduct.failureToProduceFishingGearOrEquipment",
+          "operator": "TRUE",
+          "expectedValue": ""
+        }
+      ],
+      "alternativeGroups": [
+        {
+          "id": "section15-conduct",
+          "description": "At least one statutory alternative conduct form under Section 15(a), 15(b), or 15(c), subject to the authorised-officer requirement.",
+          "elementIds": [
+            "mzi-s15-element-obstruction",
+            "mzi-s15-element-facilities-security",
+            "mzi-s15-element-failure-stop",
+            "mzi-s15-element-failure-licence",
+            "mzi-s15-element-failure-permit",
+            "mzi-s15-element-failure-logbook",
+            "mzi-s15-element-failure-document",
+            "mzi-s15-element-failure-fish",
+            "mzi-s15-element-failure-net",
+            "mzi-s15-element-failure-gear-equipment"
+          ],
+          "operator": "ANY",
+          "engineWarning": "Alternative conduct forms require alternative-element capability before Section 15 can be automatically assessed."
+        }
+      ],
+      "conditions": [
+        "The relevant conduct must concern an authorised officer exercising powers conferred under the Act.",
+        "For Section 15(c), the stop or production requirement must have been made by the authorised officer.",
+        "The listed conduct forms are alternatives and are not simultaneously required."
+      ],
+      "penalty": "Fine not exceeding rupees thirty-five lakh for vessels of less than twenty-four meters overall length and rupees seventy-five lakh for vessels of twenty-four metres or more overall length.",
+      "sourceId": "indiacode-123456789-618700",
+      "verified": true,
+      "lastVerified": "2026-09-09",
+      "warnings": [
+        "The current offence engine does not support alternative-element groups; Section 15 must not be automatically assessed until that capability exists.",
+        "Licence, permit, logbook, document, fish, net, gear or equipment not being produced does not by itself establish the Section 15 offence without the corresponding requirement having been made by an authorised officer.",
+        "Distance must not be used to determine maritime jurisdiction."
+      ]
     }
   ]
 }

@@ -132,16 +132,27 @@ function evaluateOffence(offence, facts, scenarioIds) {
   }
 
   const elements = offence.elements.map((element) => evaluateElement(element, facts));
-  const requiredElements = elements.filter((element) => element.required !== false);
-  const establishedCount = requiredElements.filter((element) => element.status === "ESTABLISHED").length;
-  const hasNotEstablished = requiredElements.some((element) => element.status === "NOT_ESTABLISHED");
-  const hasUnknown = requiredElements.some((element) => element.status === "UNKNOWN");
-  const status = requiredElements.length > 0 && establishedCount === requiredElements.length
+  const elementById = new Map(elements.map((element) => [element.elementId, element]));
+  const groupResults = evaluateAlternativeGroups(offence.alternativeGroups, elementById);
+  const groupedElementIds = new Set((offence.alternativeGroups || []).flatMap((group) => group.elementIds || []));
+  const requiredElements = elements.filter((element) => element.required !== false && !groupedElementIds.has(element.elementId));
+  const coreHasNotEstablished = requiredElements.some((element) => element.status === "NOT_ESTABLISHED");
+  const coreHasUnknown = requiredElements.some((element) => element.status === "UNKNOWN");
+  const groupHasNotEstablished = groupResults.some((group) => group.status === "NOT_ESTABLISHED");
+  const groupHasUnknown = groupResults.some((group) => group.status === "UNKNOWN");
+  const hasUnknown = coreHasUnknown || groupHasUnknown;
+  const hasNotEstablished = coreHasNotEstablished || groupHasNotEstablished;
+  const hasGroups = Array.isArray(offence.alternativeGroups) && offence.alternativeGroups.length > 0;
+  const hasRelevantEstablished = hasGroups
+    ? groupResults.some((group) => group.status === "ESTABLISHED")
+    : requiredElements.some((element) => element.status === "ESTABLISHED");
+  const status = !hasNotEstablished && !hasUnknown && requiredElements.length > 0
+    && (!hasGroups || groupResults.every((group) => group.status === "ESTABLISHED"))
     ? "OFFENCE ESTABLISHED"
     : hasNotEstablished
       ? "NOT ESTABLISHED"
-      : establishedCount > 0 && hasUnknown
-      ? "SUSPECTED / REQUIRES FURTHER VERIFICATION"
+      : hasUnknown && hasRelevantEstablished
+        ? "SUSPECTED / REQUIRES FURTHER VERIFICATION"
         : "UNKNOWN";
 
   return {
@@ -149,12 +160,49 @@ function evaluateOffence(offence, facts, scenarioIds) {
     name: offence.name || "",
     status,
     elements,
+    alternativeGroups: groupResults,
     legalBasis: toLegalBasis(offence),
     warnings: [
       ...elements.flatMap((element) => element.warnings || []),
+      ...groupResults.flatMap((group) => group.warnings || []),
       ...(status === "OFFENCE ESTABLISHED" ? [] : ["Offence status requires verification against all legal elements and facts."])
     ]
   };
+}
+
+function evaluateAlternativeGroups(groups, elementById) {
+  if (groups === undefined) return [];
+  if (!Array.isArray(groups)) {
+    return [{
+      id: "",
+      status: "UNKNOWN",
+      elementIds: [],
+      warnings: ["Alternative group is malformed and cannot be assessed reliably."]
+    }];
+  }
+
+  return groups.map((group) => {
+    const elementIds = Array.isArray(group?.elementIds) ? group.elementIds : [];
+    const missingIds = elementIds.filter((elementId) => !elementById.has(elementId));
+    if (group?.operator !== "ANY" || elementIds.length === 0 || missingIds.length > 0) {
+      return {
+        id: group?.id || "",
+        status: "UNKNOWN",
+        elementIds,
+        warnings: ["Alternative group is malformed or references missing element IDs; automatic offence assessment is blocked."]
+      };
+    }
+
+    const alternatives = elementIds.map((elementId) => elementById.get(elementId));
+    const hasEstablished = alternatives.some((element) => element.status === "ESTABLISHED");
+    const hasUnknown = alternatives.some((element) => element.status === "UNKNOWN");
+    return {
+      id: group.id || "",
+      status: hasEstablished ? "ESTABLISHED" : hasUnknown ? "UNKNOWN" : "NOT_ESTABLISHED",
+      elementIds,
+      warnings: []
+    };
+  });
 }
 
 function evaluateElement(element, facts) {
