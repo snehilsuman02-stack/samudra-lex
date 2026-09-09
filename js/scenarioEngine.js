@@ -2,10 +2,11 @@ const SCENARIO_RULES = [
   {
     id: "FOREIGN_FISHING_VESSEL",
     matches: (input) => {
+      const fishingNegated = /\bno\s+fishing\b|\bfishing\s+not\s+observed\b|\bnot\s+fishing\b|\bwithout\s+fishing\b/.test(input);
       const foreignIndicator = /\bforeign\b|\b(?:another|a different)\s+country\b/.test(input);
       const fishingActivity = /\bfishing\b/.test(input);
       const vesselType = /\b(?:vessel|boat|trawler)\b/.test(input);
-      return foreignIndicator && fishingActivity && vesselType;
+      return foreignIndicator && fishingActivity && vesselType && !fishingNegated;
     }
   },
   { id: "ILLEGAL_FISHING", keywords: ["illegal fishing", "unauthorized fishing", "fishing without"] },

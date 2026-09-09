@@ -85,7 +85,10 @@ function detectActivity(input) {
     ["sailing", /\bsailing\b|\bsail(?:ed|ing)?\b/],
     ["stopped", /\bstopped\b/]
   ];
-  return activityRules.filter(([, pattern]) => pattern.test(input)).map(([name]) => name);
+  return activityRules
+    .filter(([name, pattern]) => name !== "fishing" || (!isFishingNegated(input) && pattern.test(input)))
+    .filter(([, pattern]) => pattern.test(input))
+    .map(([name]) => name);
 }
 
 function detectLocation(input) {
@@ -106,7 +109,7 @@ function detectLocation(input) {
 
 function detectDocuments(input) {
   const documents = [];
-  const documentMatch = input.match(/(?:unable|failed|refused|did not|could not|cannot)\s+to?\s*(?:produce|provide|show|present)\s+(?:the\s+)?([^,.!?;]+?(?:licen[cs]e|permit|logbook|registration|documents?))/i);
+  const documentMatch = input.match(/(?:unable|failed|refused|did not|could not|cannot)\s+to?\s*(?:produce|provide|show|present)\s+(?:the\s+)?([^,.!?;]*?(?:licen[cs]e|permit|logbook|registration|documents?))/i);
 
   if (documentMatch) {
     documents.push(`${documentMatch[1].trim()} not produced`);
@@ -134,7 +137,11 @@ function detectBehaviour(input) {
 }
 
 function hasFishingActivity(input) {
-  return /\bfishing\b/.test(input);
+  return /\bfishing\b/.test(input) && !isFishingNegated(input);
+}
+
+function isFishingNegated(input) {
+  return /\bno\s+fishing\b|\bfishing\s+not\s+observed\b|\bnot\s+fishing\b|\bwithout\s+fishing\b/.test(input);
 }
 
 function hasUnverifiedLicenceIssue(input) {
