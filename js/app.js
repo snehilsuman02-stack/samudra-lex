@@ -204,9 +204,22 @@ function populateCaseForm(saved) {
   document.querySelector("#maritime-zone").value = saved.jurisdiction.maritimeZone || "";
   document.querySelector("#position-verified").value = String(Boolean(saved.jurisdiction.positionVerified));
   document.querySelector("#distance-baseline").value = saved.jurisdiction.distanceFromBaseline || "";
+  document.querySelector("#licence-produced").value = toSelectValue(saved.licence.produced);
+  document.querySelector("#licence-verified").value = String(Boolean(saved.licence.verified));
+  document.querySelector("#permit-produced").value = toSelectValue(saved.permit.produced);
+  document.querySelector("#permit-verified").value = String(Boolean(saved.permit.verified));
   document.querySelector("#person-role").value = saved.persons.role || "";
+  document.querySelector("#conduct-contravention").value = toSelectValue(saved.conduct.contravention);
+  document.querySelector("#conduct-licence").value = toSelectValue(saved.conduct.licenceViolation);
+  document.querySelector("#conduct-permit").value = toSelectValue(saved.conduct.permitViolation);
+  document.querySelector("#conduct-stop").value = toSelectValue(saved.conduct.failureToStop);
+  document.querySelector("#conduct-obstruction").value = toSelectValue(saved.conduct.obstruction);
   evidenceItems = Array.isArray(saved.evidence) ? saved.evidence : [];
   renderEvidenceList();
+}
+
+function toSelectValue(value) {
+  return value === null || value === undefined ? "" : String(value);
 }
 
 function renderFacts(facts) {

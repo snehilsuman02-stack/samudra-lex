@@ -112,6 +112,7 @@ export function buildFacts(caseData) {
   if (caseData.persons.role) {
     facts.person = { ...(facts.person || {}), role: caseData.persons.role };
   }
+  facts.conduct = { ...(caseData.conduct || {}) };
   facts.legal = {
     ...(facts.legal || {}),
     ...(caseData.conduct?.licenceViolation !== null && caseData.conduct?.licenceViolation !== undefined ? { licenceViolation: caseData.conduct.licenceViolation } : {}),

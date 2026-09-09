@@ -36,6 +36,32 @@ export async function runCaseAssessmentTests() {
   const evidenceAssessment = await assessCase(evidenceCase, [offence], []);
   assert(evidenceAssessment.assessment.evidenceGaps.some((gap) => gap.evidenceStatus === "EVIDENCE NOT VERIFIED" || gap.evidenceStatus === "EVIDENCE NOT PROVIDED"), "unverified evidence must not prove a condition");
 
+  const unknownRole = await assessCase(createCase({ ...base, persons: { role: "" } }), [offence], []);
+  assert(unknownRole.assessment.overallStatus === "SUSPECTED / REQUIRES FURTHER VERIFICATION", "unknown role should require verification");
+
+  const falseConduct = await assessCase(createCase({ ...base, conduct: { contravention: false } }), [offence], []);
+  assert(falseConduct.assessment.overallStatus === "NOT ESTABLISHED", "confirmed false conduct should not establish the offence");
+
+  const customAlternative = customOffence([
+    { id: "a", required: false, alternativeGroup: "g", factKey: "conduct.first", operator: "TRUE", expectedValue: "" },
+    { id: "b", required: false, alternativeGroup: "g", factKey: "conduct.second", operator: "TRUE", expectedValue: "" }
+  ], [{ id: "g", operator: "ANY", elementIds: ["a", "b"] }]);
+  const alternativeCase = await assessCase(createCase({ conduct: { first: false, second: true } }), [customAlternative], []);
+  assert(alternativeCase.assessment.overallStatus === "OFFENCE ESTABLISHED", "alternative group success should establish the custom test offence");
+
+  const unknownAlternativeCase = await assessCase(createCase({ conduct: { first: false } }), [customAlternative], []);
+  assert(unknownAlternativeCase.assessment.overallStatus === "SUSPECTED / REQUIRES FURTHER VERIFICATION", "false plus unknown alternative should require verification");
+
+  const reassessmentStart = await assessCase(createCase({ ...base, jurisdiction: { maritimeZone: "" } }), [offence], []);
+  const reassessmentEnd = await assessCase(createCase({ ...base, jurisdiction: { maritimeZone: "territorial_waters" } }), [offence], []);
+  assert(reassessmentStart.assessment.overallStatus !== reassessmentEnd.assessment.overallStatus, "changing case inputs should recalculate the assessment");
+
+  const verifiedEvidenceCase = await assessCase(createCase({
+    ...base,
+    evidence: [{ evidenceId: "position-1", type: "GPS / position data", description: "Verified position", verified: true, relatedConditionId: "mzi-s10-element-maritime-zone" }]
+  }), [offence], []);
+  assert(verifiedEvidenceCase.evidence.some((item) => item.verified), "verified evidence should remain in the saved case");
+
   const storage = createMemoryStorage();
   const saved = createCase({ incident: { description: "Saved case" } });
   saveCase(saved, storage);
@@ -44,7 +70,15 @@ export async function runCaseAssessmentTests() {
   saveCase(second, storage);
   assert(listSavedCases(storage).length === 2, "new case should not overwrite an existing case");
 
-  return { passed: 7 };
+  saveCase(established, storage);
+  const retained = listSavedCases(storage).find((item) => item.caseId === established.caseId);
+  assert(retained?.assessment?.overallStatus === established.assessment.overallStatus, "saved case should retain its assessment");
+
+  return { passed: 17 };
+}
+
+function customOffence(elements, alternativeGroups = []) {
+  return { id: "case-test-offence", name: "Case test offence", verified: true, actId: "test-act", sectionId: "test-section", sourceId: "test-source", elements, alternativeGroups };
 }
 
 function createMemoryStorage() {
