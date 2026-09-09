@@ -9,17 +9,16 @@ export function assessOffences(facts, scenario, requirements = [], offences = []
     warnings: []
   };
   const scenarioIds = Array.isArray(scenario) ? scenario : [scenario];
-  const normalizedFacts = collectFacts(facts);
 
   if (facts?.location?.mentioned && facts.location.distanceNm !== null) {
     result.uncertainties.push("Distance mentioned; maritime zone not independently established.");
   }
-  if (hasLicenceNotProduced(facts)) {
-    result.uncertainties.push("Licence/permit status has not been verified.");
+  if (hasLicenceNotProduced(facts) || hasDocumentNotProduced(facts)) {
+    result.uncertainties.push("Licence was not produced; licence validity/status remains unverified.");
   }
 
   for (const requirement of Array.isArray(requirements) ? requirements : []) {
-    result.assessments.push(evaluateRequirement(requirement, facts, scenarioIds, normalizedFacts));
+    result.assessments.push(evaluateRequirement(requirement, facts, scenarioIds));
   }
 
   const verifiedOffences = Array.isArray(offences)
@@ -37,10 +36,11 @@ export function assessOffences(facts, scenario, requirements = [], offences = []
   }
   if (!verifiedOffences.length && Array.isArray(offences) && offences.length === 0) {
     result.warnings.push("No verified offence records are available for assessment.");
+    result.insufficientFacts.push("No verified offence record is currently available for element-by-element assessment.");
   }
 
   for (const offence of verifiedOffences) {
-    const assessment = evaluateOffence(offence, facts, scenarioIds, normalizedFacts);
+    const assessment = evaluateOffence(offence, facts, scenarioIds);
     result.assessments.push(assessment);
     if (assessment.status === "OFFENCE ESTABLISHED") {
       result.establishedOffences.push(assessment);
@@ -51,25 +51,18 @@ export function assessOffences(facts, scenario, requirements = [], offences = []
     }
   }
 
-  if (hasLicenceNotProduced(facts)) {
-    result.notEstablished.push({
-      type: "document-related-offence-assessment",
-      status: "NOT ESTABLISHED",
-      documentStatus: "DOCUMENT NOT PRODUCED",
-      verificationStatus: "DOCUMENT VALIDITY NOT VERIFIED",
-      reason: "The available facts do not establish that the vessel does not hold a valid licence or otherwise satisfy all elements of an offence.",
-      legalBasis: []
-    });
-  }
-
   if (!hasForeignFishingFacts(facts, scenarioIds)) {
     result.insufficientFacts.push("Foreign-vessel-specific offence applicability is not established from the supplied facts.");
+  }
+
+  if (hasLicenceNotProduced(facts) || hasDocumentNotProduced(facts)) {
+    result.insufficientFacts.push("Licence was not produced; licence validity/status remains unverified.");
   }
 
   return result;
 }
 
-function evaluateRequirement(requirement, facts, scenarioIds, normalizedFacts) {
+function evaluateRequirement(requirement, facts, scenarioIds) {
   const legalBasis = toLegalBasis(requirement);
   const appliesToScenarios = Array.isArray(requirement.appliesToScenarios) ? requirement.appliesToScenarios : [];
   if (appliesToScenarios.length && !appliesToScenarios.some((id) => scenarioIds.includes(id))) {
@@ -84,34 +77,42 @@ function evaluateRequirement(requirement, facts, scenarioIds, normalizedFacts) {
     };
   }
 
-  const supportingFacts = [];
-  const missingFacts = [];
-  if (facts?.nationality === "Foreign") supportingFacts.push("Foreign vessel identified");
-  else missingFacts.push("Foreign nationality has not been confirmed");
-  if (facts?.activity?.includes("fishing")) supportingFacts.push("Fishing activity reported");
-  else missingFacts.push("Fishing activity has not been confirmed");
-  if (facts?.location?.mentioned) supportingFacts.push("Location mentioned");
-  else missingFacts.push("Applicable location or maritime zone has not been established");
-  if (hasLicenceNotProduced(facts)) {
-    supportingFacts.push("Licence not produced");
-    missingFacts.push("Licence or permit validity has not been verified");
-  } else {
-    missingFacts.push("Licence or permit status is unknown");
+  const requirementDefinitions = Array.isArray(requirement.requirements) ? requirement.requirements : [];
+  const structuredDefinitions = requirementDefinitions.every((definition) => definition && typeof definition === "object" && !Array.isArray(definition));
+  if (!requirementDefinitions.length || !structuredDefinitions) {
+    return {
+      requirementId: requirement.id || "",
+      name: requirement.name || "",
+      status: "UNKNOWN",
+      supportingFacts: [],
+      missingFacts: ["Requirement definition is not structured for reliable assessment"],
+      legalBasis,
+      warnings: ["Requirement evaluation requires structured fact keys and data."]
+    };
   }
+
+  const evaluations = requirementDefinitions.map((definition) => evaluateStructuredDefinition(definition, facts));
+  const supportingFacts = evaluations.flatMap((evaluation) => evaluation.supportingFacts);
+  const missingFacts = evaluations.flatMap((evaluation) => evaluation.missingFacts);
+  const status = evaluations.every((evaluation) => evaluation.status === "SATISFIED")
+    ? "SATISFIED"
+    : evaluations.some((evaluation) => evaluation.status === "NOT_ESTABLISHED")
+      ? "NOT_ESTABLISHED"
+      : "UNKNOWN";
 
   return {
     requirementId: requirement.id || "",
     name: requirement.name || "",
-    status: missingFacts.length ? "NOT_ESTABLISHED" : "SATISFIED",
+    status,
     supportingFacts,
     missingFacts,
     legalBasis,
-    warnings: missingFacts.length ? ["Requirement status requires further factual verification."] : []
+    warnings: status === "SATISFIED" ? [] : ["Requirement status requires further structured factual verification."]
   };
 }
 
-function evaluateOffence(offence, facts, scenarioIds, normalizedFacts) {
-  const elements = Array.isArray(offence.elements) ? offence.elements.map((element) => evaluateElement(element, normalizedFacts)) : [];
+function evaluateOffence(offence, facts, scenarioIds) {
+  const elements = Array.isArray(offence.elements) ? offence.elements.map((element) => evaluateElement(element, facts)) : [];
   const establishedCount = elements.filter((element) => element.status === "ESTABLISHED").length;
   const unresolvedCount = elements.filter((element) => element.status !== "ESTABLISHED").length;
   const status = elements.length && establishedCount === elements.length
@@ -126,24 +127,57 @@ function evaluateOffence(offence, facts, scenarioIds, normalizedFacts) {
     status,
     elements,
     legalBasis: toLegalBasis(offence),
-    warnings: status === "OFFENCE ESTABLISHED" ? [] : ["Offence status requires verification against all legal elements and facts."]
+    warnings: [
+      ...elements.flatMap((element) => element.warnings || []),
+      ...(status === "OFFENCE ESTABLISHED" ? [] : ["Offence status requires verification against all legal elements and facts."])
+    ]
   };
 }
 
-function evaluateElement(element, normalizedFacts) {
-  const text = String(element || "");
-  const tokens = significantTokens(text);
-  const matchedTokens = tokens.filter((token) => normalizedFacts.includes(token));
-  const status = matchedTokens.length === tokens.length && tokens.length > 0
+function evaluateElement(element, facts) {
+  if (!element || typeof element !== "object" || Array.isArray(element) || !Array.isArray(element.factKeys)) {
+    return {
+      elementId: element?.id || "",
+      element: typeof element === "string" ? element : "",
+      status: "UNKNOWN",
+      supportingFacts: [],
+      missingFacts: [],
+      warnings: ["Offence element is not structured for reliable assessment."]
+    };
+  }
+
+  const required = element.required !== false;
+  const values = element.factKeys.map((factKey) => readFact(facts, factKey));
+  const knownValues = values.filter((value) => value !== undefined && value !== null && value !== "");
+  const status = !required || knownValues.length === values.length
     ? "ESTABLISHED"
-    : matchedTokens.length > 0
+    : knownValues.length
       ? "NOT_ESTABLISHED"
       : "UNKNOWN";
   return {
-    element: text,
+    elementId: element.id || "",
+    element: element.description || "",
     status,
-    supportingFacts: matchedTokens.length ? ["Matching supplied fact text identified"] : [],
-    missingFacts: status === "ESTABLISHED" ? [] : ["Facts establishing this element have not been supplied or verified"]
+    supportingFacts: knownValues.map((value) => `${element.factKeys[values.indexOf(value)]}: ${String(value)}`),
+    missingFacts: status === "ESTABLISHED" ? [] : element.factKeys.filter((factKey, index) => values[index] === undefined || values[index] === null || values[index] === ""),
+    warnings: []
+  };
+}
+
+function evaluateStructuredDefinition(definition, facts) {
+  if (!Array.isArray(definition.factKeys)) {
+    return {
+      status: "UNKNOWN",
+      supportingFacts: [],
+      missingFacts: ["Requirement definition is not structured for reliable assessment"]
+    };
+  }
+  const values = definition.factKeys.map((factKey) => readFact(facts, factKey));
+  const knownValues = values.filter((value) => value !== undefined && value !== null && value !== "");
+  return {
+    status: knownValues.length === values.length ? "SATISFIED" : "UNKNOWN",
+    supportingFacts: knownValues.map((value) => String(value)),
+    missingFacts: definition.factKeys.filter((factKey, index) => values[index] === undefined || values[index] === null || values[index] === "")
   };
 }
 
@@ -155,20 +189,16 @@ function toLegalBasis(record) {
   }];
 }
 
-function collectFacts(facts) {
-  return normalize([...(facts?.facts || []), ...(facts?.suspectedIssue || []), ...(facts?.documents || []), ...(facts?.uncertainties || [])].join(" "));
-}
-
-function significantTokens(value) {
-  return normalize(value).split(" ").filter((token) => token.length >= 4);
-}
-
-function normalize(value) {
-  return String(value || "").toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+function readFact(facts, factKey) {
+  return String(factKey || "").split(".").reduce((value, key) => value?.[key], facts);
 }
 
 function hasLicenceNotProduced(facts) {
   return (facts?.documents || []).some((document) => /licen[cs]e|permit/i.test(document) && /not produced|not provided|not presented/i.test(document));
+}
+
+function hasDocumentNotProduced(facts) {
+  return (facts?.documents || []).some((document) => /documents?/i.test(document) && /not produced|not provided|not presented/i.test(document));
 }
 
 function hasForeignFishingFacts(facts, scenarioIds) {
