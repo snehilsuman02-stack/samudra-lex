@@ -202,9 +202,12 @@ function evaluateCondition(condition, facts) {
   let satisfied = false;
   if (operator === "EQUALS") satisfied = value === condition.expectedValue;
   if (operator === "NOT_EQUALS") satisfied = value !== condition.expectedValue;
-  if (operator === "CONTAINS") satisfied = Array.isArray(value)
-    ? value.includes(condition.expectedValue)
-    : String(value).includes(String(condition.expectedValue));
+  if (operator === "CONTAINS") {
+    const expectedValues = Array.isArray(condition.expectedValue) ? condition.expectedValue : [condition.expectedValue];
+    satisfied = expectedValues.some((expectedValue) => Array.isArray(value)
+      ? value.includes(expectedValue)
+      : String(value).toLowerCase().includes(String(expectedValue).toLowerCase()));
+  }
   if (operator === "TRUE") satisfied = value === true;
   if (operator === "FALSE") satisfied = value === false;
   if (operator === "EXISTS") satisfied = true;

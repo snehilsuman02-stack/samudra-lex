@@ -35,17 +35,20 @@
           "id": "mzi-s10-element-section-3-contravention",
           "description": "The use of the foreign vessel is in contravention of section 3, including the applicable licence or permit requirement.",
           "required": true,
-          "factKey": "",
-          "operator": "",
+          "factKey": "legal.section3Contravention",
+          "operator": "TRUE",
           "expectedValue": ""
         },
         {
           "id": "mzi-s10-element-owner-or-master",
           "description": "The person assessed is the owner or master of the vessel.",
           "required": true,
-          "factKey": "",
-          "operator": "",
-          "expectedValue": ""
+          "factKey": "person.role",
+          "operator": "CONTAINS",
+          "expectedValue": [
+            "owner",
+            "master"
+          ]
         }
       ],
       "conditions": [
