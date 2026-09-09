@@ -1,23 +1,62 @@
 import { analyseSituation } from "./legalEngine.js";
+import { assessCase, createCase, saveCase } from "./caseAssessment.js";
 
 const form = document.querySelector("#analysis-form");
 const input = document.querySelector("#situation-input");
 const results = document.querySelector("#results");
 const resultContent = document.querySelector("#result-content");
 const newAnalysisButton = document.querySelector("#new-analysis");
+const saveCaseButton = document.querySelector("#save-case");
+const evidenceList = document.querySelector("#evidence-list");
+let currentCase = createCase();
+let evidenceItems = [];
+
+document.querySelector("#case-id").value = currentCase.caseId;
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const analysis = await analyseSituation(input.value);
-  renderAnalysis(analysis);
+  currentCase = readCaseFromForm();
+  const [analysis, caseResult] = await Promise.all([
+    analyseSituation(input.value),
+    assessCase(currentCase)
+  ]);
+  currentCase = caseResult;
+  renderAnalysis(analysis, caseResult);
 });
 
 newAnalysisButton.addEventListener("click", () => {
+  form.reset();
+  evidenceItems = [];
+  renderEvidenceList();
+  currentCase = createCase();
+  document.querySelector("#case-id").value = currentCase.caseId;
   results.hidden = true;
   input.focus();
 });
 
-function renderAnalysis(analysis) {
+saveCaseButton.addEventListener("click", () => {
+  currentCase = readCaseFromForm();
+  saveCase(currentCase);
+  saveCaseButton.textContent = "Case saved";
+});
+
+document.querySelector("#add-evidence").addEventListener("click", () => {
+  const description = document.querySelector("#evidence-description").value.trim();
+  if (!description) return;
+  evidenceItems.push({
+    evidenceId: `evidence-${Date.now()}`,
+    type: document.querySelector("#evidence-type").value,
+    description,
+    source: "Local case register",
+    dateTime: new Date().toISOString(),
+    verified: document.querySelector("#evidence-verified").value === "true",
+    relatedConditionId: document.querySelector("#evidence-condition").value.trim()
+  });
+  document.querySelector("#evidence-description").value = "";
+  renderEvidenceList();
+});
+
+function renderAnalysis(analysis, caseResult) {
   const scenarioDetected = analysis.detectedScenario.includes("FOREIGN_FISHING_VESSEL");
   const scenarioMarkup = analysis.detectedScenario.length
     ? `<ul class="scenario-list">${analysis.detectedScenario.map((scenario) => `<li>${formatScenarioName(scenario)}</li>`).join("")}</ul>`
@@ -57,10 +96,75 @@ function renderAnalysis(analysis) {
       <h3>LEGAL POWERS ASSESSMENT</h3>
       ${powerMarkup}
     </div>
+    ${renderCaseAssessment(caseResult)}
     ${scenarioDetected ? `<div class="result-block"><h3>WARNING</h3><p class="disclaimer">Scenario classification does not establish that an offence has occurred or that a particular enforcement power is available.</p></div>` : ""}
   `;
   results.hidden = false;
   results.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function renderCaseAssessment(caseResult) {
+  if (!caseResult?.assessment) return "";
+  const assessment = caseResult.assessment;
+  const offences = assessment.offences.length
+    ? assessment.offences.map((offence) => `<article class="case-offence"><h4>${escapeHtml(offence.name)}</h4><p class="case-status">${escapeHtml(offence.status)}</p><p>${escapeHtml(offence.reason)}</p><p class="statutory-label">LEGAL BASIS</p><p class="source-reference">${escapeHtml(offence.legalBasis.map((basis) => `${basis.actId} / ${basis.sectionId}`).join("; "))}</p><details><summary>Why this result?</summary>${renderDecisionTrace(offence)}</details></article>`).join("")
+    : "<p>No applicable verified offence record was assessed.</p>";
+  return `<div class="result-block case-assessment"><h3>CASE ASSESSMENT</h3><p class="case-final-status">${escapeHtml(assessment.overallStatus)}</p><p>${escapeHtml(assessment.reasons.map((item) => item.reason).join(" "))}</p><h4>APPLICABLE OFFENCE(S)</h4>${offences}<h4>VERIFICATION REQUIRED</h4>${renderList(assessment.verificationRequired.map((item) => item.action), "No unresolved conditions identified.")}<h4>EVIDENCE GAPS</h4>${renderList(assessment.evidenceGaps.map((item) => `${item.action} (${item.evidenceStatus})`), "No evidence gaps identified.")}</div>`;
+}
+
+function renderDecisionTrace(offence) {
+  return `<ol class="decision-trace">${offence.decisionTrace.map((entry) => `<li><strong>${escapeHtml(entry.description)}</strong><span>${escapeHtml(entry.evaluation || entry.status)}: ${escapeHtml(entry.reason)}</span></li>`).join("")}</ol>`;
+}
+
+function renderList(items, emptyText) {
+  return items.length ? `<ul class="fact-list">${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : `<p>${emptyText}</p>`;
+}
+
+function readCaseFromForm() {
+  const booleanOrNull = (id) => {
+    const value = document.querySelector(id).value;
+    return value === "" ? null : value === "true";
+  };
+  return createCase({
+    ...currentCase,
+    incident: {
+      ...currentCase.incident,
+      description: input.value,
+      dateTime: document.querySelector("#incident-date-time").value,
+      latitude: document.querySelector("#latitude").value,
+      longitude: document.querySelector("#longitude").value,
+      reportedLocation: document.querySelector("#reported-location").value,
+      activity: document.querySelector("#observed-activity").value.split(",").map((item) => item.trim()).filter(Boolean)
+    },
+    vessel: {
+      name: document.querySelector("#vessel-name").value,
+      imoNumber: document.querySelector("#imo-number").value,
+      callSign: document.querySelector("#call-sign").value,
+      flag: document.querySelector("#vessel-flag").value,
+      vesselType: document.querySelector("#vessel-type").value,
+      owner: document.querySelector("#vessel-owner").value
+    },
+    jurisdiction: {
+      maritimeZone: document.querySelector("#maritime-zone").value,
+      distanceFromBaseline: document.querySelector("#distance-baseline").value,
+      positionVerified: document.querySelector("#position-verified").value === "true"
+    },
+    licence: { required: null, produced: booleanOrNull("#licence-produced"), valid: null, verified: document.querySelector("#licence-verified").value === "true" },
+    permit: { required: null, produced: booleanOrNull("#permit-produced"), verified: document.querySelector("#permit-verified").value === "true" },
+    persons: { ...currentCase.persons, role: document.querySelector("#person-role").value },
+    conduct: {
+      contravention: booleanOrNull("#conduct-contravention"),
+      licenceViolation: booleanOrNull("#conduct-licence"),
+      permitViolation: booleanOrNull("#conduct-permit"),
+      failureToStop: booleanOrNull("#conduct-stop"),
+      obstruction: booleanOrNull("#conduct-obstruction")
+    },
+    evidence: evidenceItems
+  });
+}
+
+function renderEvidenceList() {
+  evidenceList.innerHTML = evidenceItems.map((item) => `<li>${escapeHtml(item.type)}: ${escapeHtml(item.description)}${item.verified ? " (verified)" : " (not verified)"}</li>`).join("");
 }
 
 function renderFacts(facts) {

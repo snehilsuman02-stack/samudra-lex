@@ -42,6 +42,71 @@
       <form id="analysis-form">
         <label class="sr-only" for="situation-input">Describe the maritime law-enforcement situation</label>
         <textarea id="situation-input" name="situation" rows="8" placeholder="Describe the situation, vessel, location, activity and suspected issue..." required></textarea>
+        <details class="case-details">
+          <summary>Case details</summary>
+          <div class="case-grid">
+            <label>Case ID<input id="case-id" type="text" readonly></label>
+            <label>Vessel name<input id="vessel-name" type="text"></label>
+            <label>IMO number<input id="imo-number" type="text"></label>
+            <label>Call sign<input id="call-sign" type="text"></label>
+            <label>Flag<input id="vessel-flag" type="text"></label>
+            <label>Vessel type<input id="vessel-type" type="text"></label>
+            <label>Owner<input id="vessel-owner" type="text"></label>
+            <label>Incident date/time<input id="incident-date-time" type="datetime-local"></label>
+            <label>Latitude<input id="latitude" type="text"></label>
+            <label>Longitude<input id="longitude" type="text"></label>
+            <label>Reported location<input id="reported-location" type="text"></label>
+            <label>Observed activity<input id="observed-activity" type="text" placeholder="fishing, sailing"></label>
+            <label>Maritime zone
+              <select id="maritime-zone"><option value="">Unknown</option><option value="territorial_waters">Territorial waters</option><option value="EEZ">EEZ</option></select>
+            </label>
+            <label>Position verified
+              <select id="position-verified"><option value="false">Unknown / not verified</option><option value="true">Confirmed</option></select>
+            </label>
+            <label>Distance from baseline<input id="distance-baseline" type="text"></label>
+            <label>Licence produced
+              <select id="licence-produced"><option value="">Unknown</option><option value="true">Yes</option><option value="false">No</option></select>
+            </label>
+            <label>Licence verified
+              <select id="licence-verified"><option value="false">No</option><option value="true">Yes</option></select>
+            </label>
+            <label>Permit produced
+              <select id="permit-produced"><option value="">Unknown</option><option value="true">Yes</option><option value="false">No</option></select>
+            </label>
+            <label>Permit verified
+              <select id="permit-verified"><option value="false">No</option><option value="true">Yes</option></select>
+            </label>
+            <label>Person role
+              <select id="person-role"><option value="">Unknown</option><option value="master">Master</option><option value="owner">Owner</option><option value="crew">Crew</option></select>
+            </label>
+            <label>Contravention
+              <select id="conduct-contravention"><option value="">Unknown</option><option value="true">Confirmed</option><option value="false">Disproved</option></select>
+            </label>
+            <label>Licence violation
+              <select id="conduct-licence"><option value="">Unknown</option><option value="true">Confirmed</option><option value="false">Disproved</option></select>
+            </label>
+            <label>Permit violation
+              <select id="conduct-permit"><option value="">Unknown</option><option value="true">Confirmed</option><option value="false">Disproved</option></select>
+            </label>
+            <label>Failure to stop
+              <select id="conduct-stop"><option value="">Unknown</option><option value="true">Confirmed</option><option value="false">Disproved</option></select>
+            </label>
+            <label>Obstruction
+              <select id="conduct-obstruction"><option value="">Unknown</option><option value="true">Confirmed</option><option value="false">Disproved</option></select>
+            </label>
+          </div>
+          <fieldset class="evidence-entry">
+            <legend>Evidence register</legend>
+            <div class="case-grid">
+              <label>Type<select id="evidence-type"><option>Photograph</option><option>Video</option><option>GPS / position data</option><option>AIS data</option><option>Vessel document</option><option>Licence</option><option>Permit</option><option>Statement</option><option>Boarding report</option><option>Inspection report</option><option>Other</option></select></label>
+              <label>Description<input id="evidence-description" type="text"></label>
+              <label>Related condition ID<input id="evidence-condition" type="text"></label>
+              <label>Verified<select id="evidence-verified"><option value="false">No</option><option value="true">Yes</option></select></label>
+            </div>
+            <button id="add-evidence" class="text-button" type="button">Add evidence item</button>
+            <ul id="evidence-list" class="evidence-list"></ul>
+          </fieldset>
+        </details>
         <div class="form-footer">
           <p class="example-text"><span>Example</span> Foreign fishing vessel detected approximately 35 NM offshore. The vessel appears to be engaged in fishing and is unable to produce the required documents.</p>
           <button class="primary-button" type="submit">Analyse situation <span aria-hidden="true">&#8594;</span></button>
@@ -55,7 +120,10 @@
           <p class="section-label">02 / Initial assessment</p>
           <h2>Analysis result</h2>
         </div>
-        <button id="new-analysis" class="text-button" type="button">New analysis <span aria-hidden="true">&#8599;</span></button>
+        <div class="result-actions">
+          <button id="save-case" class="text-button" type="button">Save case</button>
+          <button id="new-analysis" class="text-button" type="button">New analysis <span aria-hidden="true">&#8599;</span></button>
+        </div>
       </div>
       <div id="result-content"></div>
     </section>
