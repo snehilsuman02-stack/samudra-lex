@@ -106,7 +106,7 @@ function renderPotentialPower(power) {
     <p>${escapeHtml(power.powerName)}</p>
     <p class="power-description">${escapeHtml(power.description)}</p>
     <p class="statutory-label">LEGAL BASIS</p>
-    <p class="power-detail">${escapeHtml(power.actName || "Verified Act record")} — Section ${escapeHtml(power.legalBasis.subsection)}.</p>
+    <p class="power-detail">${escapeHtml(power.actName || "Verified Act record")} — Section 9${escapeHtml(power.legalBasis.subsection)}.</p>
     <p class="statutory-label">CONDITIONS / LIMITATIONS</p>
     <ul>${[...power.conditions, ...power.limitations].map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
     <p class="power-detail">${escapeHtml(power.assessmentReason || "")}</p>

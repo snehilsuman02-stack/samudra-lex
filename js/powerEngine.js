@@ -63,11 +63,13 @@ export async function assessLegalPowers(facts, scenario) {
     const assessedPower = {
       ...power,
       assessmentStatus: conditionalIds.has(power.id)
-        ? (thresholdSatisfied ? "CONDITION SATISFIED BASED ON USER-ENTERED FACT" : "THRESHOLD NOT ESTABLISHED FROM FACTS PROVIDED")
+        ? "CONDITION-DEPENDENT"
         : "POTENTIALLY RELEVANT",
       assessmentReason: conditionalIds.has(power.id)
-        ? "Verify the legal and factual basis before action."
-        : "The extracted facts are relevant to the Section 9 framework."
+        ? (thresholdSatisfied
+          ? "User-entered facts state the reason-to-believe threshold; verify the legal and factual basis before action."
+          : "Reason-to-believe threshold not established from facts provided.")
+        : "The supplied facts are relevant to the statutory provision. Applicability in the particular situation requires verification of the statutory conditions, officer authorisation and jurisdiction."
     };
 
     if (!conditionalIds.has(power.id)) {
