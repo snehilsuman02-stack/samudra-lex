@@ -180,35 +180,46 @@ function wireOffenceFinder() {
   const resultsEl = document.querySelector("#offence-results");
   const offenceList = document.querySelector("#offence-list");
   const offenceDetail = document.querySelector("#offence-detail");
+  const engineButton = formEl?.querySelector('button[type="submit"]');
+  const engineStatus = document.querySelector("#offence-engine-status");
   if (!formEl || !offenceList || !offenceDetail) return;
   formEl.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const candidate = createCase({
-      incident: {
-        description: [
-          document.querySelector("#finder-activity").value,
-          document.querySelector("#finder-zone").value,
-          document.querySelector("#finder-vessel-type").value,
-          document.querySelector("#finder-documents").value === "not-produced" ? "required documents not produced" : ""
-        ].filter(Boolean).join(" ") || "Offence Finder assessment",
-        activity: [document.querySelector("#finder-activity").value].filter(Boolean)
-      },
-      vessel: { vesselType: document.querySelector("#finder-vessel-type").value },
-      jurisdiction: { maritimeZone: document.querySelector("#finder-zone").value },
-      conduct: {
-        contravention: document.querySelector("#finder-contravention").value === "true" ? true : document.querySelector("#finder-contravention").value === "false" ? false : null,
-        licenceViolation: document.querySelector("#finder-documents").value === "not-produced" ? true : null,
-        permitViolation: document.querySelector("#finder-documents").value === "not-produced" ? true : null
+    if (engineButton?.disabled) return;
+    if (engineButton) {
+      engineButton.disabled = true;
+      engineButton.textContent = "Running...";
+    }
+    if (engineStatus) {
+      engineStatus.className = "offence-engine-status running";
+      engineStatus.textContent = "RUNNING OFFENCE ENGINE...";
+    }
+    try {
+      const candidate = buildOffenceFinderCase();
+      const caseResult = await assessCase(candidate);
+      currentCase = caseResult;
+      renderOperationalSummary();
+      renderCaseWorkspace();
+      offenceFinderResult = caseResult;
+      selectedOffenceIndex = null;
+      renderOffenceFinderList();
+      renderOffenceFinderDetail();
+      if (engineStatus) {
+        engineStatus.className = "offence-engine-status completed";
+        engineStatus.textContent = "OFFENCE ENGINE COMPLETED";
       }
-    });
-    const caseResult = await assessCase(candidate);
-    currentCase = caseResult;
-    renderOperationalSummary();
-    renderCaseWorkspace();
-    offenceFinderResult = caseResult;
-    selectedOffenceIndex = null;
-    renderOffenceFinderList();
-    renderOffenceFinderDetail();
+    } catch (error) {
+      console.error("SAMUDRA-LEX offence engine error", error);
+      if (engineStatus) {
+        engineStatus.className = "offence-engine-status error";
+        engineStatus.textContent = "OFFENCE ENGINE ERROR — Unable to complete the assessment.";
+      }
+    } finally {
+      if (engineButton) {
+        engineButton.disabled = false;
+        engineButton.textContent = "Run offence engine";
+      }
+    }
   });
   document.querySelector("#offence-search").addEventListener("input", renderOffenceFinderList);
   document.querySelector("#offence-filter-act").addEventListener("change", renderOffenceFinderList);
@@ -236,6 +247,28 @@ function wireOffenceFinder() {
     if (action === "situation") showModule("situation-analysis");
   });
   renderOffenceFinderList();
+}
+
+function buildOffenceFinderCase() {
+  if (currentCase?.incident?.description?.trim()) return createCase(currentCase);
+  return createCase({
+    incident: {
+      description: [
+        document.querySelector("#finder-activity").value,
+        document.querySelector("#finder-zone").value,
+        document.querySelector("#finder-vessel-type").value,
+        document.querySelector("#finder-documents").value === "not-produced" ? "required documents not produced" : ""
+      ].filter(Boolean).join(" ") || "Offence Finder assessment",
+      activity: [document.querySelector("#finder-activity").value].filter(Boolean)
+    },
+    vessel: { vesselType: document.querySelector("#finder-vessel-type").value },
+    jurisdiction: { maritimeZone: document.querySelector("#finder-zone").value },
+    conduct: {
+      contravention: document.querySelector("#finder-contravention").value === "true" ? true : document.querySelector("#finder-contravention").value === "false" ? false : null,
+      licenceViolation: document.querySelector("#finder-documents").value === "not-produced" ? true : null,
+      permitViolation: document.querySelector("#finder-documents").value === "not-produced" ? true : null
+    }
+  });
 }
 
 function renderOffenceFinderList() {

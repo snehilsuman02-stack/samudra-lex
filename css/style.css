@@ -491,6 +491,10 @@ fieldset legend {
 .offence-result-list { display: grid; gap: 16px; margin-top: 16px; }
 .offence-finder-intro { margin-bottom: 16px; color: var(--muted); }
 .offence-finder-intro p { margin: 0; }
+.offence-engine-status { min-height: 1.2em; margin: 0; color: var(--muted); font-size: 0.76rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.offence-engine-status.running { color: var(--warning); }
+.offence-engine-status.completed { color: var(--success); }
+.offence-engine-status.error { color: var(--danger); }
 .offence-list-item { display: flex; align-items: center; justify-content: space-between; gap: 18px; width: 100%; padding: 16px; text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; color: var(--text); }
 .offence-list-item:hover, .offence-list-item:focus-visible { border-color: var(--teal); outline: none; }
 .offence-list-item > span:first-child { display: grid; gap: 6px; }
