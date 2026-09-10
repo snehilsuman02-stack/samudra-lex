@@ -197,11 +197,11 @@ function wireOffenceFinder() {
     });
     const caseResult = await assessCase(candidate);
     const assessment = caseResult.assessment || {};
-    resultsEl.innerHTML = renderOffenceFinderResults(assessment);
+    resultsEl.innerHTML = renderOffenceFinderResults(assessment, caseResult);
   });
 }
 
-function renderOffenceFinderResults(assessment) {
+function renderOffenceFinderResults(assessment, caseResult = {}) {
   const offences = Array.isArray(assessment.offences) ? assessment.offences : [];
   if (!offences.length) return `<div class="offence-summary"><h3>OFFENCE ANALYSIS</h3><p>NO OFFENCE FINDINGS GENERATED</p></div>`;
   const counts = {
@@ -210,10 +210,10 @@ function renderOffenceFinderResults(assessment) {
     requiresVerification: offences.filter((offence) => offence.status === "SUSPECTED / REQUIRES FURTHER VERIFICATION").length
   };
   const summary = `<div class="offence-summary"><h3>OFFENCE ANALYSIS SUMMARY</h3><div class="offence-summary-grid"><div><strong>TOTAL FINDINGS</strong><span>${offences.length}</span></div><div class="summary-established"><strong>OFFENCE ESTABLISHED</strong><span>${counts.established}</span></div><div class="summary-not-established"><strong>NOT ESTABLISHED</strong><span>${counts.notEstablished}</span></div><div class="summary-verification"><strong>REQUIRES FURTHER VERIFICATION</strong><span>${counts.requiresVerification}</span></div></div></div>`;
-  return `${summary}<div class="offence-result-list">${offences.map((offence) => renderOffenceFinderCard(offence, assessment.evidenceGaps || [], assessment.evidence || [])).join("")}</div>`;
+  return `${summary}<div class="offence-result-list">${offences.map((offence) => renderOffenceFinderCard(offence, assessment.evidenceGaps || [], caseResult.evidence || [], caseResult)).join("")}</div>`;
 }
 
-function renderOffenceFinderCard(offence, evidenceGaps, caseEvidence) {
+function renderOffenceFinderCard(offence, evidenceGaps, caseEvidence, caseResult = {}) {
   const verificationItems = deduplicateDisplayRequirements(offence.verificationRequired || []);
   const verificationKeys = new Set(verificationItems.map((item) => normalizeDisplayRequirement(item.action)));
   const offenceEvidenceGaps = deduplicateDisplayRequirements(evidenceGaps.filter((item) => verificationKeys.has(normalizeDisplayRequirement(item.action))));
@@ -221,7 +221,7 @@ function renderOffenceFinderCard(offence, evidenceGaps, caseEvidence) {
     const record = legalRecords.find((item) => item.sectionId === basis.sectionId);
     return `<div><strong>ACT</strong><br>${escapeHtml(record?.act || basis.actId || "Not available")}</div><div><strong>SECTION</strong><br>${escapeHtml(record?.section || basis.sectionId || "Not available")}</div>`;
   }).join("") || `<div><strong>ACT</strong><br>Not available</div><div><strong>SECTION</strong><br>Not available</div>`;
-  const conditionMapping = renderConditionMapping(offence, evidenceGaps, caseEvidence);
+  const conditionMapping = renderConditionMapping(offence, evidenceGaps, caseEvidence, caseResult);
   return `<article class="offence-result-card">
     <header class="offence-card-header"><div><p class="section-label">OFFENCE</p><h4>${escapeHtml(offence.name || "Unnamed offence")}</h4></div><span class="status-badge ${statusClass(offence.status)} offence-status">${escapeHtml(offence.status || "UNKNOWN")}</span></header>
     <div class="offence-condition-summary"><strong>OFFENCE STATUS</strong><span>${conditionSummary(offence)}</span></div>
@@ -233,9 +233,9 @@ function renderOffenceFinderCard(offence, evidenceGaps, caseEvidence) {
   </article>`;
 }
 
-function renderConditionMapping(offence, evidenceGaps = [], caseEvidence = []) {
-  const elements = Array.isArray(offence.elements) ? offence.elements : [];
-  if (!elements.length) return "";
+function renderConditionMapping(offence, evidenceGaps = [], caseEvidence = [], caseResult = {}) {
+  const elements = uniqueConditionElements(offence);
+  if (!elements.length) return `<details class="condition-mapping"><summary>LEGAL CONDITIONS</summary><p>No legal condition mapping is available for this finding.</p></details>`;
   const legalBasis = (offence.legalBasis || [])[0] || {};
   const verificationByCondition = new Map((offence.verificationRequired || []).map((item) => [item.conditionId, item.action]));
   const evidenceGapByCondition = new Map();
@@ -252,6 +252,26 @@ function renderConditionMapping(offence, evidenceGaps = [], caseEvidence = []) {
     return `<div class="condition-row"><div><strong>CONDITION</strong><span>${escapeHtml(element.element || "Condition not described")}</span></div><div><strong>STATUS</strong><span class="condition-status ${conditionStatusClass(element.status)}">${escapeHtml(status)}</span></div><div><strong>EVIDENCE / FACT</strong><span>${escapeHtml(evidenceText)}</span></div><div><strong>SOURCE</strong><span>${escapeHtml(legalBasis.actId || "Not available")} / ${escapeHtml(legalBasis.sectionId || "Not available")}</span></div><div><strong>VERIFICATION</strong><span>${escapeHtml(verification)}</span></div></div>`;
   }).join("");
   return `<details class="condition-mapping"><summary>LEGAL CONDITIONS</summary><div class="condition-list">${rows}</div></details>`;
+}
+
+function uniqueConditionElements(offence) {
+  const traceById = new Map((offence.decisionTrace || []).map((entry) => [entry.conditionId, entry]));
+  const unique = new Map();
+  (offence.elements || []).forEach((element) => {
+    const conditionId = element.elementId || element.id || "";
+    const trace = traceById.get(conditionId);
+    const condition = String(element.element || trace?.description || "").trim();
+    if (!condition && !conditionId) return;
+    unique.set(conditionId || condition.toLowerCase(), {
+      ...element,
+      element: condition || `Condition ${conditionId}`,
+      elementId: conditionId,
+      status: element.status || trace?.status || "UNKNOWN",
+      inputValue: element.inputValue === undefined ? trace?.inputValue : element.inputValue,
+      evidenceStatus: element.evidenceStatus || trace?.evidenceStatus
+    });
+  });
+  return [...unique.values()];
 }
 
 function conditionSummary(offence) {
@@ -705,7 +725,7 @@ function renderAnalysis(analysis, caseResult) {
     </div>
     <div class="result-block">
       <h3>SITUATION</h3>
-      <p>${escapeHtml(analysis.input)}</p>
+      ${renderSituationSummary(caseResult, analysis.input)}
     </div>
     <div class="result-block">
       <h3>FACTS IDENTIFIED</h3>
@@ -888,6 +908,48 @@ function renderFacts(facts) {
     : "";
 
   return `<dl class="fact-details">${detailsMarkup}</dl>${factList}${uncertaintyList}`;
+}
+
+function renderSituationSummary(caseResult, description) {
+  const licence = formatDocumentStatus(caseResult.licence, "Licence");
+  const permit = formatDocumentStatus(caseResult.permit, "Permit");
+  const authorisedOfficer = readCaseValue(caseResult, ["authorisedOfficer", "legal.authorisedOfficer", "conduct.authorisedOfficer"]);
+  const recordedRequirement = readCaseValue(caseResult, ["authorisedOfficerRequirement", "legal.authorisedOfficerRequirement", "conduct.authorisedOfficerRequirement"]);
+  const details = [
+    ["Description", description || "No situation description provided."],
+    ["Vessel", caseResult.vessel?.name || "Vessel name unknown"],
+    ["Vessel type", caseResult.vessel?.vesselType || "Vessel type unknown"],
+    ["Flag / nationality", caseResult.vessel?.flag || "Flag / nationality unknown"],
+    ["Observed activity", (caseResult.incident?.activity || []).join(", ") || "Observed activity unknown"],
+    ["Maritime zone", caseResult.jurisdiction?.maritimeZone || "Maritime zone unknown"],
+    ["Licence status", licence],
+    ["Permit status", permit],
+    ["Person role", caseResult.persons?.role || "Person role unknown"],
+    ["Authorised officer status", formatKnownStatus(authorisedOfficer, "Authorised officer status")],
+    ["Recorded requirement", formatKnownStatus(recordedRequirement, "Recorded requirement")]
+  ];
+  return `<dl class="fact-details situation-summary-details">${details.map(([label, value]) => `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd>`).join("")}</dl>`;
+}
+
+function formatDocumentStatus(document, label) {
+  if (!document || document.produced === null || document.produced === undefined) return `${label} status unknown`;
+  if (document.produced === false) return `${label} not produced`;
+  if (document.verified === true) return `${label} verified`;
+  return `${label} produced, verification unknown`;
+}
+
+function formatKnownStatus(value, label) {
+  if (value === true) return `${label} confirmed`;
+  if (value === false) return `${label} not confirmed`;
+  return `${label} unknown`;
+}
+
+function readCaseValue(caseData, paths) {
+  for (const path of paths) {
+    const value = path.split(".").reduce((current, key) => current?.[key], caseData);
+    if (value !== undefined && value !== null && value !== "") return value;
+  }
+  return undefined;
 }
 
 function renderLegalSource(section) {
