@@ -500,6 +500,12 @@ fieldset legend {
 .boarding-populate-status.completed { color: var(--success); }
 .boarding-populate-status.warning { color: var(--warning); }
 .boarding-populate-status.error { color: var(--danger); }
+.evidence-case-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 16px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel-alt); }
+.evidence-case-heading strong { color: var(--muted); font-size: 0.7rem; letter-spacing: 0.08em; }
+.evidence-case-heading span { color: var(--navy); font-weight: 700; }
+.evidence-case-heading button { margin-left: auto; }
+.evidence-register-status-message { min-height: 1.2em; margin: 12px 0 0; color: var(--muted); font-size: 0.76rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.evidence-register-status-message.completed { color: var(--success); }
 .offence-list-item { display: flex; align-items: center; justify-content: space-between; gap: 18px; width: 100%; padding: 16px; text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; color: var(--text); }
 .offence-list-item:hover, .offence-list-item:focus-visible { border-color: var(--teal); outline: none; }
 .offence-list-item > span:first-child { display: grid; gap: 6px; }

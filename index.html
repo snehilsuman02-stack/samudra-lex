@@ -428,6 +428,7 @@
             <button class="secondary-button" type="button" data-action="back-dashboard">Back to Dashboard</button>
           </div>
           <div class="module-panel">
+            <div class="evidence-case-heading"><strong>CURRENT CASE</strong><span id="evidence-current-case">NO ACTIVE CASE</span><button class="secondary-button" type="button" data-action="open-case-workspace">Back to Case Workspace</button></div>
             <div class="case-grid evidence-entry-grid">
               <label>Evidence ID<input id="evidence-id" type="text" value="EVD-001"></label>
               <label>Evidence type<select id="evidence-register-type"><option>Photograph</option><option>Video</option><option>GPS / position data</option><option>Statement</option><option>Licence</option><option>Permit</option><option>Boarding report</option><option>Other</option></select></label>
@@ -444,7 +445,9 @@
               <button type="button" class="secondary-button" id="edit-evidence-register-item">EDIT</button>
               <button type="button" class="secondary-button" id="delete-evidence-register-item">DELETE</button>
             </div>
+            <p id="evidence-register-status-message" class="evidence-register-status-message" aria-live="polite"></p>
             <div id="evidence-register-list" class="list-panel"></div>
+            <div class="module-actions"><button type="button" class="secondary-button" data-action="open-offence-finder-related">View Related Offences</button></div>
           </div>
         </section>
 
@@ -525,6 +528,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/app.js?v=32"></script>
+  <script type="module" src="js/app.js?v=34"></script>
 </body>
 </html>

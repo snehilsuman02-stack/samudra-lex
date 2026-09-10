@@ -89,6 +89,12 @@ function wireDashboardActions() {
         showModule("case-workspace");
       }
       if (action === "open-evidence") showModule("evidence-register");
+      if (action === "open-offence-finder-related") {
+        selectedOffenceIndex = null;
+        showModule("offence-finder");
+        renderOffenceFinderList();
+        renderOffenceFinderDetail();
+      }
       if (action === "open-saved-cases") showModule("saved-cases");
       if (action === "new-situation") {
         handleNewAnalysis();
@@ -158,7 +164,8 @@ function wireSituationForm() {
       source: "Local case register",
       dateTime: new Date().toISOString(),
       verified: document.querySelector("#evidence-verified").value === "true",
-      relatedConditionId: document.querySelector("#evidence-condition").value.trim()
+      relatedConditionId: document.querySelector("#evidence-condition").value.trim(),
+      relatedCaseId: currentCase.caseId
     });
     document.querySelector("#evidence-description").value = "";
     renderEvidenceList();
@@ -243,7 +250,10 @@ function wireOffenceFinder() {
       renderOffenceFinderDetail();
     }
     if (action === "case-workspace") showModule("case-workspace");
-    if (action === "evidence") showModule("evidence-register");
+    if (action === "evidence") {
+      renderEvidenceRegisterList();
+      showModule("evidence-register");
+    }
     if (action === "situation") showModule("situation-analysis");
   });
   renderOffenceFinderList();
@@ -570,35 +580,42 @@ function restoreActsHistory(event) {
 }
 
 function wireCaseWorkspace() {
+  const workspace = document.querySelector('[data-view="case-workspace"]');
   document.querySelectorAll("[data-case-tab]").forEach((tab) => {
     tab.addEventListener("click", () => {
       document.querySelectorAll("[data-case-tab]").forEach((item) => item.classList.toggle("active", item === tab));
       document.querySelectorAll("[data-case-panel]").forEach((panel) => panel.classList.toggle("active", panel.dataset.casePanel === tab.dataset.caseTab));
     });
   });
+  workspace?.addEventListener("click", (event) => {
+    if (event.target.closest('button[data-action="open-evidence"]')) showModule("evidence-register");
+  });
 }
 
 function wireEvidenceRegister() {
-  document.querySelector("#add-evidence-register-item").addEventListener("click", () => {
+  document.querySelector("#add-evidence-register-item").addEventListener("click", async () => {
     const description = document.querySelector("#evidence-register-description").value.trim();
     if (!description) return;
+    const evidenceId = document.querySelector("#evidence-id").value || `EVD-${Date.now()}`;
     const entry = {
-      evidenceId: document.querySelector("#evidence-id").value || `EVD-${Date.now()}`,
+      evidenceId,
       type: document.querySelector("#evidence-register-type").value,
       description,
       source: document.querySelector("#evidence-register-source").value,
       dateTime: document.querySelector("#evidence-register-datetime").value,
       relatedFact: document.querySelector("#evidence-register-fact").value,
       verificationStatus: document.querySelector("#evidence-register-status").value,
-      remarks: document.querySelector("#evidence-register-remarks").value
+      remarks: document.querySelector("#evidence-register-remarks").value,
+      relatedCaseId: currentCase.caseId
     };
     const existing = Array.isArray(currentCase.evidence) ? currentCase.evidence : [];
-    currentCase.evidence = [...existing, { ...entry, verified: entry.verificationStatus === "VERIFIED" }];
+    const duplicate = existing.findIndex((item) => item.evidenceId === evidenceId);
+    const savedEntry = { ...entry, verified: entry.verificationStatus === "VERIFIED" };
+    if (duplicate >= 0) existing[duplicate] = { ...existing[duplicate], ...savedEntry };
+    else existing.push(savedEntry);
+    currentCase.evidence = existing;
     evidenceItems = currentCase.evidence;
-    renderEvidenceList();
-    renderEvidenceRegisterList();
-    renderOperationalSummary();
-    renderCaseWorkspace();
+    await refreshEvidenceAssessment("EVIDENCE SAVED");
   });
 
   document.querySelector("#view-evidence-register-item").addEventListener("click", () => {
@@ -618,10 +635,12 @@ function wireEvidenceRegister() {
         relatedFact: document.querySelector("#evidence-register-fact").value,
         verificationStatus: document.querySelector("#evidence-register-status").value,
         remarks: document.querySelector("#evidence-register-remarks").value,
+        relatedCaseId: currentCase.caseId,
         verified: document.querySelector("#evidence-register-status").value === "VERIFIED"
       };
       renderEvidenceRegisterList();
       renderCaseWorkspace();
+      refreshEvidenceAssessment("EVIDENCE SAVED");
     }
   });
 
@@ -632,7 +651,28 @@ function wireEvidenceRegister() {
     renderEvidenceList();
     renderEvidenceRegisterList();
     renderCaseWorkspace();
+    refreshEvidenceAssessment("EVIDENCE REMOVED");
   });
+}
+
+async function refreshEvidenceAssessment(message) {
+  try {
+    currentCase = await assessCase(currentCase);
+    if (offenceFinderResult?.caseId === currentCase.caseId) offenceFinderResult = currentCase;
+    if (latestAnalysis?.caseResult?.caseId === currentCase.caseId) latestAnalysis.caseResult = currentCase;
+    renderEvidenceList();
+    renderEvidenceRegisterList();
+    renderOperationalSummary();
+    renderCaseWorkspace();
+    if (selectedOffenceIndex !== null) renderOffenceFinderDetail();
+    const status = document.querySelector("#evidence-register-status-message");
+    if (status) {
+      status.className = "evidence-register-status-message completed";
+      status.textContent = message;
+    }
+  } catch (error) {
+    console.error("SAMUDRA-LEX evidence assessment refresh error", error);
+  }
 }
 
 function wireSavedCases() {
@@ -775,6 +815,12 @@ function populateSituationFromBoard() {
 }
 
 function showModule(name) {
+  if (name === "offence-finder" && currentCase?.assessment?.offences?.length) {
+    offenceFinderResult = currentCase;
+    selectedOffenceIndex = null;
+    renderOffenceFinderList();
+    renderOffenceFinderDetail();
+  }
   if (name === "acts-sections") {
     selectedActId = null;
     selectedSectionId = null;
@@ -813,7 +859,7 @@ function renderCaseWorkspace() {
   const basis = (assessment.legalBasis || []).map((item) => `${item.actId} / ${item.sectionId}`).join("; ") || "Not available";
   const reviewItems = assessment.verificationRequired || [];
   const panels = {
-    "case-details": `<div class="tight-grid"><div><strong>CASE ID</strong><br>${escapeHtml(currentCase.caseId)}</div><div><strong>VESSEL</strong><br>${escapeHtml(currentCase.vessel?.name || "Unknown")}</div><div><strong>FLAG</strong><br>${escapeHtml(currentCase.vessel?.flag || "Unknown")}</div><div><strong>VESSEL TYPE</strong><br>${escapeHtml(currentCase.vessel?.vesselType || "Unknown")}</div><div><strong>CREATED</strong><br>${escapeHtml(currentCase.createdAt || "-")}</div><div><strong>UPDATED</strong><br>${escapeHtml(currentCase.updatedAt || "-")}</div></div>`,
+    "case-details": `<div class="tight-grid"><div><strong>CASE ID</strong><br>${escapeHtml(currentCase.caseId)}</div><div><strong>VESSEL</strong><br>${escapeHtml(currentCase.vessel?.name || "Unknown")}</div><div><strong>FLAG</strong><br>${escapeHtml(currentCase.vessel?.flag || "Unknown")}</div><div><strong>VESSEL TYPE</strong><br>${escapeHtml(currentCase.vessel?.vesselType || "Unknown")}</div><div><strong>CREATED</strong><br>${escapeHtml(currentCase.createdAt || "-")}</div><div><strong>UPDATED</strong><br>${escapeHtml(currentCase.updatedAt || "-")}</div></div><div class="module-actions"><button class="secondary-button" type="button" data-action="open-evidence">Evidence Register</button></div>`,
     situation: `<h3>SITUATION</h3><p>${escapeHtml(currentCase.incident?.description || "No situation has been recorded.")}</p>`,
     "legal-analysis": `<h3>LEGAL ANALYSIS</h3><p>${escapeHtml(assessmentText)}</p><p><strong>LEGAL BASIS</strong><br>${escapeHtml(basis)}</p>`,
     "offence-findings": renderWorkspaceOffences(assessment),
@@ -896,7 +942,7 @@ function renderWorkspaceOffences(assessment) {
 }
 
 function renderEvidenceRegisterListMarkup(items) {
-  return items.map((item) => `<div class="list-row"><header><h4>${escapeHtml(item.evidenceId || "EVIDENCE")}</h4><span class="status-badge ${item.verified ? "established" : "pending"}">${escapeHtml(item.verificationStatus || (item.verified ? "VERIFIED" : "PENDING VERIFICATION"))}</span></header><div class="tight-grid"><div><strong>EVIDENCE TYPE</strong><br>${escapeHtml(item.type || "Unknown")}</div><div><strong>DESCRIPTION</strong><br>${escapeHtml(item.description || "No description")}</div><div><strong>SOURCE</strong><br>${escapeHtml(item.source || "Local case register")}</div><div><strong>DATE / TIME</strong><br>${escapeHtml(item.dateTime || "-")}</div><div><strong>REMARKS</strong><br>${escapeHtml(item.remarks || "-")}</div></div></div>`).join("");
+  return items.map((item) => `<div class="list-row"><header><h4>${escapeHtml(item.evidenceId || "EVIDENCE")}</h4><span class="status-badge ${item.verified ? "established" : "pending"}">${escapeHtml(item.verificationStatus || (item.verified ? "VERIFIED" : "PENDING VERIFICATION"))}</span></header><div class="tight-grid"><div><strong>EVIDENCE TYPE</strong><br>${escapeHtml(item.type || "Unknown")}</div><div><strong>DESCRIPTION</strong><br>${escapeHtml(item.description || "No description")}</div><div><strong>SOURCE</strong><br>${escapeHtml(item.source || "Local case register")}</div><div><strong>DATE / TIME</strong><br>${escapeHtml(item.dateTime || "-")}</div><div><strong>RELATED CASE</strong><br>${escapeHtml(item.relatedCaseId || currentCase.caseId || "No active case")}</div><div><strong>RELATED CONDITION</strong><br>${escapeHtml(item.relatedConditionId || item.relatedFact || "Not linked")}</div><div><strong>REMARKS</strong><br>${escapeHtml(item.remarks || "-")}</div></div></div>`).join("");
 }
 
 function renderReviewPanel(assessment) {
@@ -1365,6 +1411,8 @@ function renderVerificationModule() {
 function renderEvidenceRegisterList() {
   const container = document.querySelector("#evidence-register-list");
   if (!container) return;
+  const caseLabel = document.querySelector("#evidence-current-case");
+  if (caseLabel) caseLabel.textContent = currentCase?.caseId || "NO ACTIVE CASE";
   const rows = currentCase.evidence && currentCase.evidence.length
     ? renderEvidenceRegisterListMarkup(currentCase.evidence)
     : `<div class="list-row"><p>No evidence has been recorded for the current case.</p></div>`;
