@@ -1,5 +1,6 @@
 import { analyseSituation } from "./legalEngine.js";
 import { assessCase, CASE_STORAGE_KEY, createCase, listSavedCases, loadCase, saveCase } from "./caseAssessment.js";
+import { summarizeCaseStatus } from "./workflowState.js";
 
 const form = document.querySelector("#analysis-form");
 const input = document.querySelector("#situation-input");
@@ -32,6 +33,7 @@ function initialize() {
   renderLegalSources();
   renderVerificationModule();
   renderEvidenceRegisterList();
+  renderOperationalSummary();
   showModule("dashboard");
 }
 
@@ -86,6 +88,7 @@ function wireSituationForm() {
     renderAnalysis(analysis, caseResult);
     renderVerificationModule();
     renderSavedCases();
+    renderOperationalSummary();
     showModule("situation-analysis");
   });
 
@@ -95,6 +98,7 @@ function wireSituationForm() {
     currentCase = readCaseFromForm();
     saveCase(currentCase);
     renderSavedCases();
+    renderOperationalSummary();
     saveCaseButton.textContent = "Case saved";
     setTimeout(() => { saveCaseButton.textContent = "Save case"; }, 1200);
   });
@@ -104,6 +108,7 @@ function wireSituationForm() {
     if (!saved) return;
     currentCase = saved;
     populateCaseForm(saved);
+    renderOperationalSummary();
   });
 
   document.querySelector("#add-evidence").addEventListener("click", () => {
@@ -211,6 +216,7 @@ function wireEvidenceRegister() {
     evidenceItems = currentCase.evidence;
     renderEvidenceList();
     renderEvidenceRegisterList();
+    renderOperationalSummary();
   });
 
   document.querySelector("#view-evidence-register-item").addEventListener("click", () => {
@@ -247,17 +253,20 @@ function wireSavedCases() {
     if (action === "open") {
       currentCase = match;
       populateCaseForm(match);
+      renderOperationalSummary();
       showModule("situation-analysis");
     }
     if (action === "edit") {
       currentCase = match;
       populateCaseForm(match);
+      renderOperationalSummary();
       showModule("situation-analysis");
     }
     if (action === "duplicate") {
       const duplicate = createCase({ ...match, caseId: nextCaseId() });
       saveCase(duplicate);
       renderSavedCases();
+      renderOperationalSummary();
       renderSavedCaseCards();
     }
     if (action === "delete") {
@@ -268,6 +277,7 @@ function wireSavedCases() {
         // ignore storage access failures in offline or restricted contexts
       }
       renderSavedCases();
+      renderOperationalSummary();
       renderSavedCaseCards();
     }
   });
@@ -291,6 +301,7 @@ function handleNewAnalysis() {
   currentCase = createCase();
   document.querySelector("#case-id").value = currentCase.caseId;
   results.hidden = true;
+  renderOperationalSummary();
   input.focus();
 }
 
@@ -340,8 +351,16 @@ function renderAnalysis(analysis, caseResult) {
     ? analysis.legalSources.map(renderLegalSource).join("")
     : `<div class="no-basis"><strong>NO VERIFIED LEGAL BASIS FOUND</strong><p>The current legal database does not contain a verified provision matching this query.</p></div>`;
   const powerMarkup = renderPowerAssessment(analysis.powerAssessment);
+  const workflowSummary = summarizeCaseStatus(caseResult);
 
   resultContent.innerHTML = `
+    <div class="result-block workflow-summary ${workflowSummary.severity}">
+      <h3>OPERATIONS SUMMARY</h3>
+      <div class="status-badge ${statusClass(caseResult.assessment?.overallStatus || "UNKNOWN")}">${escapeHtml(caseResult.assessment?.overallStatus || "UNKNOWN")}</div>
+      <p><strong>${escapeHtml(workflowSummary.title)}</strong></p>
+      <p>${escapeHtml(workflowSummary.action)}</p>
+      <p>${escapeHtml(workflowSummary.detail)}</p>
+    </div>
     <div class="result-block">
       <h3>SITUATION</h3>
       <p>${escapeHtml(analysis.input)}</p>
@@ -506,6 +525,7 @@ function populateCaseForm(saved) {
   document.querySelector("#conduct-obstruction").value = toSelectValue(saved.conduct.obstruction);
   evidenceItems = Array.isArray(saved.evidence) ? saved.evidence : [];
   renderEvidenceList();
+  renderOperationalSummary();
 }
 
 function renderFacts(facts) {
@@ -650,12 +670,17 @@ function renderVerificationModule() {
   }
   const assessment = latestAnalysis.caseResult.assessment;
   const details = assessment.legalBasis?.length ? assessment.legalBasis.map((basis) => `${basis.actId} / ${basis.sectionId}`).join("; ") : "Not available";
+  const workflowSummary = summarizeCaseStatus(latestAnalysis.caseResult);
   container.innerHTML = `
     <div class="list-row">
       <header>
         <h4>LEGAL FINDING</h4>
         <span class="status-badge ${statusClass(assessment.overallStatus || "UNKNOWN")}">${escapeHtml(assessment.overallStatus || "UNKNOWN")}</span>
       </header>
+      <div class="workflow-banner ${workflowSummary.severity}">
+        <strong>${escapeHtml(workflowSummary.action)}</strong>
+        <p>${escapeHtml(workflowSummary.detail)}</p>
+      </div>
       <div class="tight-grid">
         <div><strong>STATUS</strong><br>${escapeHtml(assessment.overallStatus || "UNKNOWN")}</div>
         <div><strong>LEGAL BASIS</strong><br>${escapeHtml(details)}</div>
@@ -692,6 +717,17 @@ function renderEvidenceRegisterList() {
     `).join("")
     : `<div class="list-row"><p>No evidence has been recorded for the current case.</p></div>`;
   container.innerHTML = rows;
+}
+
+function renderOperationalSummary() {
+  const summary = summarizeCaseStatus(currentCase);
+  const summaryNode = document.querySelector("#operational-summary");
+  if (!summaryNode) return;
+  summaryNode.innerHTML = `
+    <div class="status-badge ${statusClass(currentCase.assessment?.overallStatus || "UNKNOWN")}">${escapeHtml(currentCase.assessment?.overallStatus || "UNKNOWN")}</div>
+    <strong>${escapeHtml(summary.action)}</strong>
+    <span>${escapeHtml(summary.detail)}</span>
+  `;
 }
 
 function toSelectValue(value) {

@@ -324,6 +324,23 @@ textarea { min-height: 170px; resize: vertical; }
 .result-block { margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--line); }
 .result-block h3 { margin: 0 0 12px; color: var(--navy); letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.76rem; }
 .result-block p { margin: 0; color: var(--muted); }
+.workflow-summary { border-left: 4px solid var(--teal); background: var(--teal-soft); padding: 18px; }
+.workflow-summary.critical { border-left-color: var(--danger); background: var(--danger-soft); }
+.workflow-summary.warning { border-left-color: var(--warning); background: var(--warning-soft); }
+.workflow-summary.neutral { border-left-color: var(--muted); background: #edf2f5; }
+.workflow-summary-card {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 18px;
+  background: var(--panel-alt);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.workflow-banner { display: grid; gap: 8px; padding: 14px; border-radius: 10px; border: 1px solid var(--line); }
+.workflow-banner.critical { background: var(--danger-soft); border-color: rgba(175, 56, 62, 0.15); }
+.workflow-banner.warning { background: var(--warning-soft); border-color: rgba(180, 120, 37, 0.15); }
+.workflow-banner.neutral { background: #edf2f5; }
 .scenario-list, .fact-list { margin: 0; padding-left: 20px; }
 .scenario-list li { margin: 6px 0; }
 .no-basis, .legal-caution { margin-top: 12px; border-left: 4px solid var(--warning); background: var(--warning-soft); padding: 16px; color: var(--warning); }
@@ -350,6 +367,14 @@ textarea { min-height: 170px; resize: vertical; }
 .status-badge.suspected { background: var(--warning-soft); color: var(--warning); }
 .status-badge.not-established { background: var(--danger-soft); color: var(--danger); }
 .status-badge.unknown, .status-badge.pending { background: #edf2f5; color: var(--muted); }
+
+.workflow-summary-panel {
+  margin-top: 24px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fff;
+}
 
 .module-panel { padding: 22px; }
 .module-toolbar {
