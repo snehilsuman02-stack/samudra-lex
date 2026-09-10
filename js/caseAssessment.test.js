@@ -52,6 +52,28 @@ export async function runCaseAssessmentTests() {
   const unknownAlternativeCase = await assessCase(createCase({ conduct: { first: false } }), [customAlternative], []);
   assert(unknownAlternativeCase.assessment.overallStatus === "SUSPECTED / REQUIRES FURTHER VERIFICATION", "false plus unknown alternative should require verification");
 
+  const duplicateVerificationOffences = [
+    customOffence([{ id: "unknown-licence-a", required: true, description: "Licence status", factKey: "missingLicenceA", operator: "EXISTS", expectedValue: "" }]),
+    customOffence([{ id: "unknown-licence-b", required: true, description: "Permit status", factKey: "missingPermitB", operator: "EXISTS", expectedValue: "" }])
+  ];
+  const duplicateVerificationCase = await assessCase(createCase(), duplicateVerificationOffences, []);
+  const verificationActions = duplicateVerificationCase.assessment.verificationRequired.map((item) => item.action.toLowerCase().replace(/\s+/g, " ").trim());
+  const evidenceGapActions = duplicateVerificationCase.assessment.evidenceGaps.map((item) => item.action.toLowerCase().replace(/\s+/g, " ").trim());
+  assert(new Set(verificationActions).size === verificationActions.length, "verification requirements should be unique by normalized action");
+  assert(new Set(evidenceGapActions).size === evidenceGapActions.length, "evidence gaps should be unique by normalized action");
+  assert(duplicateVerificationCase.assessment.verificationRequired.length === 1, "equivalent licence and permit verification actions should be shown once");
+  assert(duplicateVerificationCase.assessment.verificationRequired[0].conditionIds.length === 2, "merged verification should retain both source condition IDs");
+
+  const offshoreNoLicence = await assessCase(createCase({
+    incident: { description: "Foreign fishing vessel detected approximately 35 NM offshore. The vessel appears to be engaged in fishing and is unable to produce the required documents." },
+    licence: { produced: false },
+    permit: { produced: false }
+  }));
+  const scenarioVerificationActions = offshoreNoLicence.assessment.verificationRequired.map((item) => item.action.toLowerCase().replace(/\s+/g, " ").trim());
+  const scenarioEvidenceGapActions = offshoreNoLicence.assessment.evidenceGaps.map((item) => item.action.toLowerCase().replace(/\s+/g, " ").trim());
+  assert(new Set(scenarioVerificationActions).size === scenarioVerificationActions.length, "offshore no-licence verification requirements should be unique");
+  assert(new Set(scenarioEvidenceGapActions).size === scenarioEvidenceGapActions.length, "offshore no-licence evidence gaps should be unique");
+
   const reassessmentStart = await assessCase(createCase({ ...base, jurisdiction: { maritimeZone: "" } }), [offence], []);
   const reassessmentEnd = await assessCase(createCase({ ...base, jurisdiction: { maritimeZone: "territorial_waters" } }), [offence], []);
   assert(reassessmentStart.assessment.overallStatus !== reassessmentEnd.assessment.overallStatus, "changing case inputs should recalculate the assessment");
@@ -74,7 +96,7 @@ export async function runCaseAssessmentTests() {
   const retained = listSavedCases(storage).find((item) => item.caseId === established.caseId);
   assert(retained?.assessment?.overallStatus === established.assessment.overallStatus, "saved case should retain its assessment");
 
-  return { passed: 17 };
+  return { passed: 19 };
 }
 
 function customOffence(elements, alternativeGroups = []) {

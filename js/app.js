@@ -1,5 +1,5 @@
 import { analyseSituation } from "./legalEngine.js";
-import { assessCase, CASE_STORAGE_KEY, createCase, listSavedCases, loadCase, saveCase } from "./caseAssessment.js";
+import { assessCase, CASE_STORAGE_KEY, createCase, listSavedCases, loadCase, saveCase } from "./caseAssessment.js?v=21";
 import { summarizeCaseStatus } from "./workflowState.js";
 
 const form = document.querySelector("#analysis-form");

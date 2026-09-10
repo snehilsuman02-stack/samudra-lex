@@ -78,10 +78,10 @@ export async function assessCase(caseData, offences = null, requirements = null)
   const requirementRecords = Array.isArray(loadedRequirements) ? loadedRequirements : [loadedRequirements];
   const offenceAssessment = assessOffences(facts, scenarios, requirementRecords, offenceRecords);
   const assessments = offenceAssessment.assessments.filter((assessment) => assessment.offenceId);
-  const verificationRequired = assessments.flatMap((assessment) => assessment.verificationRequired || []);
+  const verificationRequired = deduplicateVerificationRequirements(assessments.flatMap((assessment) => assessment.verificationRequired || []));
   const evidenceGaps = verificationRequired.map((item) => ({
     ...item,
-    evidenceStatus: findEvidenceStatus(currentCase.evidence, item.conditionId)
+    evidenceStatus: findEvidenceStatus(currentCase.evidence, item.conditionIds || [item.conditionId])
   }));
   const overallStatus = selectOverallStatus(assessments);
   const assessment = {
@@ -176,7 +176,33 @@ function selectOverallStatus(assessments) {
   return "SUSPECTED / REQUIRES FURTHER VERIFICATION";
 }
 
-function findEvidenceStatus(evidence, conditionId) {
-  const linked = evidence.find((item) => item.relatedConditionId === conditionId);
-  return linked ? (linked.verified ? "FACT CONFIRMED" : "EVIDENCE NOT VERIFIED") : "EVIDENCE NOT PROVIDED";
+export function deduplicateVerificationRequirements(items = []) {
+  const unique = new Map();
+  for (const item of items) {
+    const action = String(item?.action || "").trim();
+    if (!action) continue;
+    const key = normalizeRequirementText(action);
+    const existing = unique.get(key);
+    const conditionIds = [...new Set([...(existing?.conditionIds || []), item.conditionId].filter(Boolean))];
+    if (existing) {
+      existing.conditionIds = conditionIds;
+      existing.sourceItems = [...(existing.sourceItems || []), item];
+    } else {
+      unique.set(key, { ...item, action, conditionId: item.conditionId || "", conditionIds, sourceItems: [item] });
+    }
+  }
+  return [...unique.values()];
+}
+
+function normalizeRequirementText(value) {
+  return String(value).trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+function findEvidenceStatus(evidence, conditionIds) {
+  const ids = Array.isArray(conditionIds) ? conditionIds : [conditionIds];
+  const linked = evidence.filter((item) => ids.includes(item.relatedConditionId));
+  if (linked.some((item) => item.verified)) return "FACT CONFIRMED";
+  const unverified = linked[0];
+  if (unverified) return "EVIDENCE NOT VERIFIED";
+  return "EVIDENCE NOT PROVIDED";
 }
