@@ -493,12 +493,25 @@ fieldset legend {
 .offence-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
 .offence-card-header h4 { margin: 0; color: var(--navy); font-size: 1.05rem; }
 .offence-status { flex-shrink: 0; }
+.offence-condition-summary { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; color: var(--muted); font-size: 0.8rem; }
+.offence-condition-summary strong { color: var(--navy); letter-spacing: 0.08em; font-size: 0.7rem; }
 .offence-result-card section { display: grid; gap: 8px; }
 .offence-result-card section p { margin: 0; color: var(--muted); }
 .offence-result-card h5 { margin: 0; color: var(--teal); font-size: 0.72rem; letter-spacing: 0.1em; }
 .offence-legal-basis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .requirement-list { margin: 0; padding-left: 22px; color: var(--muted); }
 .requirement-list li { margin: 6px 0; }
+.condition-mapping { border: 1px solid var(--line); border-radius: 10px; background: var(--panel-alt); }
+.condition-mapping summary { cursor: pointer; padding: 13px 15px; color: var(--teal); font-weight: 700; font-size: 0.72rem; letter-spacing: 0.1em; }
+.condition-list { display: grid; gap: 10px; padding: 0 12px 12px; }
+.condition-row { display: grid; grid-template-columns: minmax(180px, 1.3fr) repeat(4, minmax(120px, 1fr)); gap: 10px; padding: 12px; border-top: 1px solid var(--line); }
+.condition-row div { display: grid; gap: 5px; align-content: start; }
+.condition-row strong { color: var(--muted); font-size: 0.66rem; letter-spacing: 0.07em; }
+.condition-row span { color: var(--text); font-size: 0.78rem; }
+.condition-row .condition-status { font-weight: 700; }
+.condition-status.established { color: var(--success); }
+.condition-status.not-established { color: var(--danger); }
+.condition-status.suspected { color: var(--warning); }
 .case-card-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .case-card-actions button { padding: 8px 10px; }
 .settings-panel { display: grid; gap: 18px; }
@@ -557,4 +570,5 @@ fieldset legend {
   .offence-summary-grid, .offence-legal-basis { grid-template-columns: 1fr; }
   .offence-card-header { display: block; }
   .offence-status { margin-top: 10px; }
+  .condition-row { grid-template-columns: 1fr; }
 }

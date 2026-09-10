@@ -210,10 +210,10 @@ function renderOffenceFinderResults(assessment) {
     requiresVerification: offences.filter((offence) => offence.status === "SUSPECTED / REQUIRES FURTHER VERIFICATION").length
   };
   const summary = `<div class="offence-summary"><h3>OFFENCE ANALYSIS SUMMARY</h3><div class="offence-summary-grid"><div><strong>TOTAL FINDINGS</strong><span>${offences.length}</span></div><div class="summary-established"><strong>OFFENCE ESTABLISHED</strong><span>${counts.established}</span></div><div class="summary-not-established"><strong>NOT ESTABLISHED</strong><span>${counts.notEstablished}</span></div><div class="summary-verification"><strong>REQUIRES FURTHER VERIFICATION</strong><span>${counts.requiresVerification}</span></div></div></div>`;
-  return `${summary}<div class="offence-result-list">${offences.map((offence) => renderOffenceFinderCard(offence, assessment.evidenceGaps || [])).join("")}</div>`;
+  return `${summary}<div class="offence-result-list">${offences.map((offence) => renderOffenceFinderCard(offence, assessment.evidenceGaps || [], assessment.evidence || [])).join("")}</div>`;
 }
 
-function renderOffenceFinderCard(offence, evidenceGaps) {
+function renderOffenceFinderCard(offence, evidenceGaps, caseEvidence) {
   const verificationItems = deduplicateDisplayRequirements(offence.verificationRequired || []);
   const verificationKeys = new Set(verificationItems.map((item) => normalizeDisplayRequirement(item.action)));
   const offenceEvidenceGaps = deduplicateDisplayRequirements(evidenceGaps.filter((item) => verificationKeys.has(normalizeDisplayRequirement(item.action))));
@@ -221,13 +221,63 @@ function renderOffenceFinderCard(offence, evidenceGaps) {
     const record = legalRecords.find((item) => item.sectionId === basis.sectionId);
     return `<div><strong>ACT</strong><br>${escapeHtml(record?.act || basis.actId || "Not available")}</div><div><strong>SECTION</strong><br>${escapeHtml(record?.section || basis.sectionId || "Not available")}</div>`;
   }).join("") || `<div><strong>ACT</strong><br>Not available</div><div><strong>SECTION</strong><br>Not available</div>`;
+  const conditionMapping = renderConditionMapping(offence, evidenceGaps, caseEvidence);
   return `<article class="offence-result-card">
     <header class="offence-card-header"><div><p class="section-label">OFFENCE</p><h4>${escapeHtml(offence.name || "Unnamed offence")}</h4></div><span class="status-badge ${statusClass(offence.status)} offence-status">${escapeHtml(offence.status || "UNKNOWN")}</span></header>
+    <div class="offence-condition-summary"><strong>OFFENCE STATUS</strong><span>${conditionSummary(offence)}</span></div>
     <section><h5>EXPLANATION</h5><p>${escapeHtml(offence.reason || "No explanation available.")}</p></section>
     <section><h5>LEGAL BASIS</h5><div class="offence-legal-basis">${legalBasis}</div></section>
+    ${conditionMapping}
     ${verificationItems.length ? `<section><h5>VERIFICATION REQUIRED</h5>${renderRequirementList(verificationItems)}</section>` : ""}
     ${offenceEvidenceGaps.length ? `<section><h5>EVIDENCE GAPS</h5>${renderRequirementList(offenceEvidenceGaps, (item) => `${item.action} (${item.evidenceStatus || "EVIDENCE NOT PROVIDED"})`)}</section>` : ""}
   </article>`;
+}
+
+function renderConditionMapping(offence, evidenceGaps = [], caseEvidence = []) {
+  const elements = Array.isArray(offence.elements) ? offence.elements : [];
+  if (!elements.length) return "";
+  const legalBasis = (offence.legalBasis || [])[0] || {};
+  const verificationByCondition = new Map((offence.verificationRequired || []).map((item) => [item.conditionId, item.action]));
+  const evidenceGapByCondition = new Map();
+  evidenceGaps.forEach((gap) => (gap.conditionIds || [gap.conditionId]).forEach((conditionId) => evidenceGapByCondition.set(conditionId, gap)));
+  const rows = elements.map((element) => {
+    const linkedEvidence = caseEvidence.filter((item) => item.relatedConditionId === element.elementId);
+    const evidenceText = linkedEvidence.length
+      ? linkedEvidence.map((item) => `${item.evidenceId || "Evidence"}: ${item.description || item.type || "Recorded evidence"}`).join("; ")
+      : element.inputValue === undefined || element.inputValue === null
+        ? "EVIDENCE NOT PROVIDED"
+        : `FACT AVAILABLE: ${formatConditionValue(element.inputValue)}`;
+    const status = formatConditionStatus(element.status);
+    const verification = verificationByCondition.get(element.elementId) || evidenceGapByCondition.get(element.elementId)?.action || "Not required for this condition.";
+    return `<div class="condition-row"><div><strong>CONDITION</strong><span>${escapeHtml(element.element || "Condition not described")}</span></div><div><strong>STATUS</strong><span class="condition-status ${conditionStatusClass(element.status)}">${escapeHtml(status)}</span></div><div><strong>EVIDENCE / FACT</strong><span>${escapeHtml(evidenceText)}</span></div><div><strong>SOURCE</strong><span>${escapeHtml(legalBasis.actId || "Not available")} / ${escapeHtml(legalBasis.sectionId || "Not available")}</span></div><div><strong>VERIFICATION</strong><span>${escapeHtml(verification)}</span></div></div>`;
+  }).join("");
+  return `<details class="condition-mapping"><summary>LEGAL CONDITIONS</summary><div class="condition-list">${rows}</div></details>`;
+}
+
+function conditionSummary(offence) {
+  const elements = Array.isArray(offence.elements) ? offence.elements : [];
+  const established = elements.filter((element) => element.status === "ESTABLISHED").length;
+  const notEstablished = elements.filter((element) => element.status === "NOT_ESTABLISHED").length;
+  const requiringVerification = elements.filter((element) => element.status === "UNKNOWN").length;
+  return `${established} Established / ${notEstablished} Not Established / ${requiringVerification} Requiring Verification`;
+}
+
+function formatConditionStatus(status) {
+  if (status === "ESTABLISHED") return "ESTABLISHED";
+  if (status === "NOT_ESTABLISHED") return "NOT ESTABLISHED";
+  return "UNKNOWN / REQUIRES VERIFICATION";
+}
+
+function conditionStatusClass(status) {
+  if (status === "ESTABLISHED") return "established";
+  if (status === "NOT_ESTABLISHED") return "not-established";
+  return "suspected";
+}
+
+function formatConditionValue(value) {
+  if (Array.isArray(value)) return value.join(", ");
+  if (typeof value === "object") return JSON.stringify(value);
+  return String(value);
 }
 
 function renderRequirementList(items, formatter = (item) => item.action) {
@@ -685,7 +735,7 @@ function renderCaseAssessment(caseResult) {
   if (!caseResult?.assessment) return "";
   const assessment = caseResult.assessment;
   const offences = assessment.offences.length
-    ? assessment.offences.map((offence) => `<article class="case-offence"><h4>${escapeHtml(offence.name)}</h4><p class="case-status">${escapeHtml(offence.status)}</p><p>${escapeHtml(offence.reason)}</p><p class="statutory-label">LEGAL BASIS</p><p class="source-reference">${escapeHtml(offence.legalBasis.map((basis) => `${basis.actId} / ${basis.sectionId}`).join("; "))}</p><details><summary>Why this result?</summary>${renderDecisionTrace(offence)}</details></article>`).join("")
+    ? assessment.offences.map((offence) => `<article class="case-offence"><h4>${escapeHtml(offence.name)}</h4><p class="case-status">${escapeHtml(offence.status)}</p><p>${escapeHtml(offence.reason)}</p><p class="statutory-label">LEGAL BASIS</p><p class="source-reference">${escapeHtml(offence.legalBasis.map((basis) => `${basis.actId} / ${basis.sectionId}`).join("; "))}</p>${renderConditionMapping(offence, assessment.evidenceGaps || [], currentCase.evidence || [])}<details><summary>Why this result?</summary>${renderDecisionTrace(offence)}</details></article>`).join("")
     : "<p>No applicable verified offence record was assessed.</p>";
   return `<div class="result-block case-assessment"><h3>CASE ASSESSMENT</h3><p class="case-final-status">${escapeHtml(assessment.overallStatus)}</p><p>${escapeHtml((assessment.reasons || []).map((item) => item.reason).join(" "))}</p><h4>APPLICABLE OFFENCE(S)</h4>${offences}<h4>FAILED CONDITIONS</h4>${renderList((assessment.failedConditions || []).map((item) => item.reason || item.description), "No failed conditions identified.")}<h4>VERIFICATION REQUIRED</h4>${renderList((assessment.verificationRequired || []).map((item) => item.action), "No unresolved conditions identified.")}<h4>EVIDENCE GAPS</h4>${renderList((assessment.evidenceGaps || []).map((item) => `${item.action} (${item.evidenceStatus})`), "No evidence gaps identified.")}</div>`;
 }
