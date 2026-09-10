@@ -479,6 +479,26 @@ fieldset legend {
 .list-row header { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
 .list-row h4 { margin: 0; color: var(--navy); }
 .tight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.offence-summary { margin-top: 18px; padding: 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel-alt); }
+.offence-summary h3 { margin: 0 0 14px; color: var(--navy); font-size: 0.8rem; letter-spacing: 0.08em; }
+.offence-summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.offence-summary-grid div { display: grid; gap: 6px; padding: 12px; border: 1px solid var(--line); border-radius: 9px; background: var(--panel); }
+.offence-summary-grid strong { color: var(--muted); font-size: 0.68rem; letter-spacing: 0.06em; }
+.offence-summary-grid span { color: var(--navy); font-size: 1.2rem; font-weight: 700; }
+.summary-established { border-left: 4px solid var(--success) !important; }
+.summary-not-established { border-left: 4px solid var(--danger) !important; }
+.summary-verification { border-left: 4px solid var(--warning) !important; }
+.offence-result-list { display: grid; gap: 16px; margin-top: 16px; }
+.offence-result-card { display: grid; gap: 16px; padding: 20px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); box-shadow: 0 8px 20px var(--shadow); }
+.offence-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.offence-card-header h4 { margin: 0; color: var(--navy); font-size: 1.05rem; }
+.offence-status { flex-shrink: 0; }
+.offence-result-card section { display: grid; gap: 8px; }
+.offence-result-card section p { margin: 0; color: var(--muted); }
+.offence-result-card h5 { margin: 0; color: var(--teal); font-size: 0.72rem; letter-spacing: 0.1em; }
+.offence-legal-basis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.requirement-list { margin: 0; padding-left: 22px; color: var(--muted); }
+.requirement-list li { margin: 6px 0; }
 .case-card-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .case-card-actions button { padding: 8px 10px; }
 .settings-panel { display: grid; gap: 18px; }
@@ -509,6 +529,7 @@ fieldset legend {
   .progress-indicator { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .case-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .case-status-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .offence-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 800px) {
@@ -533,4 +554,7 @@ fieldset legend {
   .primary-button { width: 100%; }
   .result-actions { display: block; }
   .status-bar { gap: 10px; }
+  .offence-summary-grid, .offence-legal-basis { grid-template-columns: 1fr; }
+  .offence-card-header { display: block; }
+  .offence-status { margin-top: 10px; }
 }

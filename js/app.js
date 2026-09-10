@@ -197,29 +197,54 @@ function wireOffenceFinder() {
     });
     const caseResult = await assessCase(candidate);
     const assessment = caseResult.assessment || {};
-    const entries = Array.isArray(assessment.offences) && assessment.offences.length
-      ? assessment.offences.map((offence) => `
-        <div class="list-row">
-          <header>
-            <h4>${escapeHtml(offence.name)}</h4>
-            <span class="status-badge ${statusClass(offence.status)}">${escapeHtml(offence.status)}</span>
-          </header>
-          <p>${escapeHtml(offence.reason)}</p>
-          <div class="tight-grid">
-            <div><strong>Legal basis:</strong><br>${escapeHtml(offence.legalBasis.map((basis) => `${basis.actId} / ${basis.sectionId}`).join("; ") || "Not available")}</div>
-            <div><strong>Verification:</strong><br>${escapeHtml((assessment.verificationRequired || []).map((item) => item.action).join("; ") || "No unresolved conditions identified.")}</div>
-          </div>
-        </div>
-      `).join("")
-      : `<div class="list-row"><p>No verified offence record was assessed.</p></div>`;
-    resultsEl.innerHTML = `
-      <div class="result-block">
-        <h3>OFFENCE FINDER RESULT</h3>
-        <div class="status-badge ${statusClass(assessment.overallStatus || "UNKNOWN")}">${escapeHtml(assessment.overallStatus || "UNKNOWN")}</div>
-      </div>
-      ${entries}
-    `;
+    resultsEl.innerHTML = renderOffenceFinderResults(assessment);
   });
+}
+
+function renderOffenceFinderResults(assessment) {
+  const offences = Array.isArray(assessment.offences) ? assessment.offences : [];
+  if (!offences.length) return `<div class="offence-summary"><h3>OFFENCE ANALYSIS</h3><p>NO OFFENCE FINDINGS GENERATED</p></div>`;
+  const counts = {
+    established: offences.filter((offence) => offence.status === "OFFENCE ESTABLISHED").length,
+    notEstablished: offences.filter((offence) => offence.status === "NOT ESTABLISHED").length,
+    requiresVerification: offences.filter((offence) => offence.status === "SUSPECTED / REQUIRES FURTHER VERIFICATION").length
+  };
+  const summary = `<div class="offence-summary"><h3>OFFENCE ANALYSIS SUMMARY</h3><div class="offence-summary-grid"><div><strong>TOTAL FINDINGS</strong><span>${offences.length}</span></div><div class="summary-established"><strong>OFFENCE ESTABLISHED</strong><span>${counts.established}</span></div><div class="summary-not-established"><strong>NOT ESTABLISHED</strong><span>${counts.notEstablished}</span></div><div class="summary-verification"><strong>REQUIRES FURTHER VERIFICATION</strong><span>${counts.requiresVerification}</span></div></div></div>`;
+  return `${summary}<div class="offence-result-list">${offences.map((offence) => renderOffenceFinderCard(offence, assessment.evidenceGaps || [])).join("")}</div>`;
+}
+
+function renderOffenceFinderCard(offence, evidenceGaps) {
+  const verificationItems = deduplicateDisplayRequirements(offence.verificationRequired || []);
+  const verificationKeys = new Set(verificationItems.map((item) => normalizeDisplayRequirement(item.action)));
+  const offenceEvidenceGaps = deduplicateDisplayRequirements(evidenceGaps.filter((item) => verificationKeys.has(normalizeDisplayRequirement(item.action))));
+  const legalBasis = (offence.legalBasis || []).map((basis) => {
+    const record = legalRecords.find((item) => item.sectionId === basis.sectionId);
+    return `<div><strong>ACT</strong><br>${escapeHtml(record?.act || basis.actId || "Not available")}</div><div><strong>SECTION</strong><br>${escapeHtml(record?.section || basis.sectionId || "Not available")}</div>`;
+  }).join("") || `<div><strong>ACT</strong><br>Not available</div><div><strong>SECTION</strong><br>Not available</div>`;
+  return `<article class="offence-result-card">
+    <header class="offence-card-header"><div><p class="section-label">OFFENCE</p><h4>${escapeHtml(offence.name || "Unnamed offence")}</h4></div><span class="status-badge ${statusClass(offence.status)} offence-status">${escapeHtml(offence.status || "UNKNOWN")}</span></header>
+    <section><h5>EXPLANATION</h5><p>${escapeHtml(offence.reason || "No explanation available.")}</p></section>
+    <section><h5>LEGAL BASIS</h5><div class="offence-legal-basis">${legalBasis}</div></section>
+    ${verificationItems.length ? `<section><h5>VERIFICATION REQUIRED</h5>${renderRequirementList(verificationItems)}</section>` : ""}
+    ${offenceEvidenceGaps.length ? `<section><h5>EVIDENCE GAPS</h5>${renderRequirementList(offenceEvidenceGaps, (item) => `${item.action} (${item.evidenceStatus || "EVIDENCE NOT PROVIDED"})`)}</section>` : ""}
+  </article>`;
+}
+
+function renderRequirementList(items, formatter = (item) => item.action) {
+  return `<ul class="requirement-list">${items.map((item) => `<li>${escapeHtml(formatter(item))}</li>`).join("")}</ul>`;
+}
+
+function deduplicateDisplayRequirements(items = []) {
+  const unique = new Map();
+  items.forEach((item) => {
+    const action = String(item?.action || "").trim();
+    if (action && !unique.has(normalizeDisplayRequirement(action))) unique.set(normalizeDisplayRequirement(action), { ...item, action });
+  });
+  return [...unique.values()];
+}
+
+function normalizeDisplayRequirement(value) {
+  return String(value).trim().replace(/\s+/g, " ").toLowerCase();
 }
 
 function wireActsSearch() {
