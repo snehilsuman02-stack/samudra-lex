@@ -188,7 +188,8 @@ function wireOffenceFinder() {
         description: [
           document.querySelector("#finder-activity").value,
           document.querySelector("#finder-zone").value,
-          document.querySelector("#finder-vessel-type").value
+          document.querySelector("#finder-vessel-type").value,
+          document.querySelector("#finder-documents").value === "not-produced" ? "required documents not produced" : ""
         ].filter(Boolean).join(" ") || "Offence Finder assessment",
         activity: [document.querySelector("#finder-activity").value].filter(Boolean)
       },
@@ -247,7 +248,7 @@ function renderOffenceFinderList() {
   const sectionFilter = document.querySelector("#offence-filter-section")?.value || "";
   const statusFilter = document.querySelector("#offence-filter-status")?.value || "";
   const scenarioFilter = document.querySelector("#offence-filter-scenario")?.value || "";
-  const scenarios = offenceFinderResult?.scenarios || [];
+  const scenarios = new Set([...(currentCase?.scenarios || []), ...(offenceFinderResult?.scenarios || [])]);
   const filtered = offences.map((offence, index) => ({ offence, index })).filter(({ offence }) => {
     const basis = offence.legalBasis?.[0] || {};
     const record = legalRecords.find((item) => item.sectionId === basis.sectionId);
@@ -256,7 +257,7 @@ function renderOffenceFinderList() {
       && (!actFilter || basis.actId === actFilter)
       && (!sectionFilter || basis.sectionId === sectionFilter)
       && (!statusFilter || offence.status === statusFilter)
-      && (!scenarioFilter || scenarios.includes(scenarioFilter));
+      && (!scenarioFilter || scenarios.has(scenarioFilter));
   });
   list.innerHTML = filtered.length
     ? filtered.map(({ offence, index }) => renderOffenceFinderListItem(offence, index)).join("")
@@ -277,7 +278,15 @@ function populateOffenceFinderFilters(offences) {
     options["#offence-filter-section"].set(basis.sectionId, record?.section ? `${record.section} — ${record.title}` : basis.sectionId);
     options["#offence-filter-status"].set(offence.status, offence.status);
   });
-  (offenceFinderResult?.scenarios || []).forEach((scenario) => options["#offence-filter-scenario"].set(scenario, formatScenarioName(scenario)));
+  legalActs.forEach((act) => options["#offence-filter-act"].set(act.id, act.actName || act.id));
+  legalRecords.forEach((record) => options["#offence-filter-section"].set(record.sectionId, `${record.section} — ${record.title}`));
+  [
+    "OFFENCE ESTABLISHED",
+    "NOT ESTABLISHED",
+    "SUSPECTED / REQUIRES FURTHER VERIFICATION"
+  ].forEach((status) => options["#offence-filter-status"].set(status, status));
+  const scenarios = new Set([...(currentCase?.scenarios || []), ...(offenceFinderResult?.scenarios || [])]);
+  scenarios.forEach((scenario) => options["#offence-filter-scenario"].set(scenario, formatScenarioName(scenario)));
   Object.entries(options).forEach(([selector, values]) => {
     const select = document.querySelector(selector);
     if (!select) return;
