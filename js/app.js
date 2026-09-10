@@ -938,7 +938,15 @@ function renderSectionDetails(record) {
 function renderWorkspaceOffences(assessment) {
   const offences = assessment.offences || [];
   if (!offences.length) return "<h3>OFFENCE FINDINGS</h3><p>No offence assessment is available.</p>";
-  return `<h3>OFFENCE FINDINGS</h3>${offences.map((offence) => `<div class="list-row"><header><h4>${escapeHtml(offence.name)}</h4><span class="status-badge ${statusClass(offence.status)}">${escapeHtml(offence.status)}</span></header><p><strong>LEGAL BASIS</strong><br>${escapeHtml((offence.legalBasis || []).map((item) => `${item.actId} / ${item.sectionId}`).join("; ") || "Not available")}</p><p><strong>FACTS / EVIDENCE</strong><br>${escapeHtml(offence.reason || "No structured reasoning available.")}</p><p><strong>VERIFICATION REQUIREMENT</strong><br>${escapeHtml((offence.verificationRequired || []).map((item) => item.action).join("; ") || "None identified")}</p></div>`).join("")}`;
+  return `<h3>OFFENCE FINDINGS</h3>${offences.map((offence) => `<div class="list-row"><header><h4>${escapeHtml(offence.name)}</h4><span class="status-badge ${statusClass(offence.status)}">${escapeHtml(offence.status)}</span></header><p><strong>LEGAL BASIS</strong><br>${escapeHtml((offence.legalBasis || []).map((item) => `${item.actId} / ${item.sectionId}`).join("; ") || "Not available")}</p><p><strong>FACTS / EVIDENCE</strong><br>${escapeHtml(offence.reason || "No structured reasoning available.")}</p><p><strong>VERIFICATION REQUIREMENT</strong><br>${escapeHtml(uniqueVerificationActions(offence.verificationRequired).join("; ") || "None identified")}</p></div>`).join("")}`;
+}
+
+function uniqueVerificationActions(items = []) {
+  return deduplicateDisplayRequirements(items).map((item) => item.action);
+}
+
+function uniqueEvidenceGapItems(items = []) {
+  return deduplicateDisplayRequirements(items);
 }
 
 function renderEvidenceRegisterListMarkup(items) {
@@ -1008,7 +1016,7 @@ function renderCaseAssessment(caseResult) {
   const offences = assessment.offences.length
     ? assessment.offences.map((offence) => `<article class="case-offence"><h4>${escapeHtml(offence.name)}</h4><p class="case-status">${escapeHtml(offence.status)}</p><p>${escapeHtml(offence.reason)}</p><p class="statutory-label">LEGAL BASIS</p><p class="source-reference">${escapeHtml(offence.legalBasis.map((basis) => `${basis.actId} / ${basis.sectionId}`).join("; "))}</p>${renderConditionMapping(offence, assessment.evidenceGaps || [], currentCase.evidence || [], caseResult)}<details><summary>Why this result?</summary>${renderDecisionTrace(offence)}</details></article>`).join("")
     : "<p>No applicable verified offence record was assessed.</p>";
-  return `<div class="result-block case-assessment"><h3>CASE ASSESSMENT</h3><p class="case-final-status">${escapeHtml(assessment.overallStatus)}</p><p>${escapeHtml((assessment.reasons || []).map((item) => item.reason).join(" "))}</p><h4>APPLICABLE OFFENCE(S)</h4>${offences}<h4>FAILED CONDITIONS</h4>${renderList((assessment.failedConditions || []).map((item) => item.reason || item.description), "No failed conditions identified.")}<h4>VERIFICATION REQUIRED</h4>${renderList((assessment.verificationRequired || []).map((item) => item.action), "No unresolved conditions identified.")}<h4>EVIDENCE GAPS</h4>${renderList((assessment.evidenceGaps || []).map((item) => `${item.action} (${item.evidenceStatus})`), "No evidence gaps identified.")}</div>`;
+  return `<div class="result-block case-assessment"><h3>CASE ASSESSMENT</h3><p class="case-final-status">${escapeHtml(assessment.overallStatus)}</p><p>${escapeHtml((assessment.reasons || []).map((item) => item.reason).join(" "))}</p><h4>APPLICABLE OFFENCE(S)</h4>${offences}<h4>FAILED CONDITIONS</h4>${renderList((assessment.failedConditions || []).map((item) => item.reason || item.description), "No failed conditions identified.")}<h4>VERIFICATION REQUIRED</h4>${renderList(uniqueVerificationActions(assessment.verificationRequired).map((action) => ({ action })), "No unresolved conditions identified.")}<h4>EVIDENCE GAPS</h4>${renderList(uniqueEvidenceGapItems(assessment.evidenceGaps), "No evidence gaps identified.", (item) => `${item.action} (${item.evidenceStatus || "EVIDENCE NOT PROVIDED"})`)}</div>`;
 }
 
 function renderDecisionTrace(offence) {
@@ -1022,8 +1030,8 @@ function renderDecisionTrace(offence) {
     : "<p>No additional explanation is available for this finding.</p>";
 }
 
-function renderList(items, emptyText) {
-  return items.length ? `<ul class="fact-list">${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : `<p>${emptyText}</p>`;
+function renderList(items, emptyText, formatter = (item) => item) {
+  return items.length ? `<ul class="fact-list">${items.map((item) => `<li>${escapeHtml(formatter(item))}</li>`).join("")}</ul>` : `<p>${emptyText}</p>`;
 }
 
 function readCaseFromForm() {
@@ -1398,7 +1406,7 @@ function renderVerificationModule() {
         <div><strong>STATUS</strong><br>${escapeHtml(assessment.overallStatus || "UNKNOWN")}</div>
         <div><strong>LEGAL BASIS</strong><br>${escapeHtml(details)}</div>
         <div><strong>FACTS ESTABLISHED</strong><br>${escapeHtml((assessment.confirmedFacts || []).join("; ") || "None recorded.")}</div>
-        <div><strong>FACTS REQUIRING VERIFICATION</strong><br>${escapeHtml((assessment.verificationRequired || []).map((item) => item.action).join("; ") || "No unresolved facts.")}</div>
+        <div><strong>FACTS REQUIRING VERIFICATION</strong><br>${escapeHtml(uniqueVerificationActions(assessment.verificationRequired).join("; ") || "No unresolved facts.")}</div>
         <div><strong>EVIDENCE AVAILABLE</strong><br>${escapeHtml((currentCase.evidence || []).map((item) => item.description || item.type).join("; ") || "No evidence recorded.")}</div>
         <div><strong>EVIDENCE REQUIRED</strong><br>${escapeHtml((assessment.evidenceGaps || []).map((item) => item.action).join("; ") || "No evidence gaps identified.")}</div>
         <div><strong>SOURCE / ACT / SECTION</strong><br>${escapeHtml(details)}</div>
