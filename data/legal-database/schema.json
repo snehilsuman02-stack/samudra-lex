@@ -1,0 +1,189 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SAMUDRA-LEX legal database expansion framework",
+  "description": "Framework schema for future legal data expansion without restructuring the application.",
+  "type": "object",
+  "properties": {
+    "legal_sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["source_id", "source_type", "title", "verification_status"],
+        "properties": {
+          "source_id": { "type": "string" },
+          "source_type": { "enum": ["ACT", "RULE", "REGULATION", "NOTIFICATION", "ORDER", "BYLAW", "OTHER"] },
+          "title": { "type": "string" },
+          "short_title": { "type": "string" },
+          "jurisdiction": { "type": "string" },
+          "issuing_authority": { "type": "string" },
+          "year": { "type": ["integer", "null"] },
+          "commencement_date": { "type": "string" },
+          "effective_from": { "type": "string" },
+          "effective_to": { "type": "string" },
+          "status": { "enum": ["CURRENT", "SUPERSEDED", "AMENDED", "REPEALED", "NOT_YET_EFFECTIVE", "UNKNOWN"] },
+          "source_reference": { "type": "string" },
+          "verification_status": { "enum": ["VERIFIED", "PENDING_VERIFICATION", "SOURCE_NOT_CONFIRMED", "SUPERSEDED", "UNKNOWN"] },
+          "version": { "type": "string" },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "acts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["act_id", "act_name", "verification_status"],
+        "properties": {
+          "act_id": { "type": "string" },
+          "legal_source_id": { "type": "string" },
+          "act_name": { "type": "string" },
+          "short_title": { "type": "string" },
+          "year": { "type": ["integer", "null"] },
+          "jurisdiction": { "type": "string" },
+          "subject_category": { "type": "string" },
+          "status": { "enum": ["CURRENT", "SUPERSEDED", "AMENDED", "REPEALED", "NOT_YET_EFFECTIVE", "UNKNOWN"] },
+          "commencement_date": { "type": "string" },
+          "effective_from": { "type": "string" },
+          "effective_to": { "type": "string" },
+          "source_reference": { "type": "string" },
+          "verification_status": { "enum": ["VERIFIED", "PENDING_VERIFICATION", "SOURCE_NOT_CONFIRMED", "SUPERSEDED", "UNKNOWN"] },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["section_id", "act_id", "section_number", "provision_text"],
+        "properties": {
+          "section_id": { "type": "string" },
+          "act_id": { "type": "string" },
+          "section_number": { "type": "string" },
+          "subsection": { "type": "string" },
+          "clause": { "type": "string" },
+          "title": { "type": "string" },
+          "provision_text": { "type": "string" },
+          "offence_flag": { "type": "boolean" },
+          "penalty_flag": { "type": "boolean" },
+          "jurisdiction": { "type": "string" },
+          "effective_from": { "type": "string" },
+          "effective_to": { "type": "string" },
+          "source_reference": { "type": "string" },
+          "verification_status": { "enum": ["VERIFIED", "PENDING_VERIFICATION", "SOURCE_NOT_CONFIRMED", "SUPERSEDED", "UNKNOWN"] },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "legal_elements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["element_id", "section_id", "description"],
+        "properties": {
+          "element_id": { "type": "string" },
+          "section_id": { "type": "string" },
+          "element_type": { "enum": ["VESSEL_STATUS", "VESSEL_LOCATION", "MARITIME_ZONE", "ACTIVITY", "LICENCE", "PERMIT", "DOCUMENT", "PERSON", "CONDUCT", "TIME", "JURISDICTION", "OTHER"] },
+          "description": { "type": "string" },
+          "required": { "type": "boolean" },
+          "fact_type": { "type": "string" },
+          "verification_required": { "type": "boolean" },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "fact_requirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["fact_requirement_id", "section_id", "fact_name"],
+        "properties": {
+          "fact_requirement_id": { "type": "string" },
+          "section_id": { "type": "string" },
+          "fact_name": { "type": "string" },
+          "fact_type": { "type": "string" },
+          "required": { "type": "boolean" },
+          "status": { "enum": ["VERIFIED", "UNVERIFIED", "MISSING", "CONTRADICTED", "NOT_APPLICABLE"] },
+          "verification_status": { "enum": ["VERIFIED", "PENDING_VERIFICATION", "SOURCE_NOT_CONFIRMED", "SUPERSEDED", "UNKNOWN"] },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "evidence_requirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["evidence_requirement_id", "section_id", "evidence_type"],
+        "properties": {
+          "evidence_requirement_id": { "type": "string" },
+          "section_id": { "type": "string" },
+          "element_id": { "type": "string" },
+          "fact_requirement_id": { "type": "string" },
+          "evidence_type": { "type": "string" },
+          "description": { "type": "string" },
+          "verification_status": { "enum": ["VERIFIED", "PENDING_VERIFICATION", "SOURCE_NOT_CONFIRMED", "SUPERSEDED", "UNKNOWN"] },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "offences": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["offence_id", "section_id", "offence_name"],
+        "properties": {
+          "offence_id": { "type": "string" },
+          "section_id": { "type": "string" },
+          "offence_name": { "type": "string" },
+          "offence_description": { "type": "string" },
+          "offence_category": { "type": "string" },
+          "jurisdiction": { "type": "string" },
+          "penalty_reference": { "type": "string" },
+          "verification_required": { "type": "boolean" },
+          "status": { "enum": ["CURRENT", "SUPERSEDED", "AMENDED", "REPEALED", "NOT_YET_EFFECTIVE", "UNKNOWN"] },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "penalties": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["penalty_id", "section_id"],
+        "properties": {
+          "penalty_id": { "type": "string" },
+          "section_id": { "type": "string" },
+          "offence_id": { "type": "string" },
+          "penalty_type": { "type": "string" },
+          "minimum_penalty": { "type": "string" },
+          "maximum_penalty": { "type": "string" },
+          "imprisonment": { "type": "string" },
+          "fine": { "type": "string" },
+          "forfeiture": { "type": "string" },
+          "seizure": { "type": "string" },
+          "other_action": { "type": "string" },
+          "conditions": { "type": "string" },
+          "effective_from": { "type": "string" },
+          "effective_to": { "type": "string" },
+          "source_reference": { "type": "string" },
+          "verification_status": { "enum": ["VERIFIED", "PENDING_VERIFICATION", "SOURCE_NOT_CONFIRMED", "SUPERSEDED", "UNKNOWN"] }
+        }
+      }
+    },
+    "jurisdiction_zones": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["zone_id", "zone_category", "name"],
+        "properties": {
+          "zone_id": { "type": "string" },
+          "zone_category": { "enum": ["BASELINE", "TERRITORIAL_WATERS", "CONTIGUOUS_ZONE", "EXCLUSIVE_ECONOMIC_ZONE", "CONTINENTAL_SHELF", "HIGH_SEAS", "PORT_HARBOR", "INTERNAL_WATERS", "OTHER"] },
+          "name": { "type": "string" },
+          "jurisdiction": { "type": "string" },
+          "status": { "enum": ["CURRENT", "SUPERSEDED", "AMENDED", "REPEALED", "NOT_YET_EFFECTIVE", "UNKNOWN"] },
+          "notes": { "type": "string" }
+        }
+      }
+    }
+  }
+}

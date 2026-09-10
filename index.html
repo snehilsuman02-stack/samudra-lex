@@ -3,140 +3,448 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="SAMUDRA-LEX maritime law-enforcement decision-support foundation">
+  <meta name="description" content="SAMUDRA-LEX maritime law-enforcement dashboard">
   <title>SAMUDRA-LEX | Maritime Law-Enforcement Support</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <header class="site-header">
-    <div class="header-inner">
-      <a class="brand" href="index.html" aria-label="SAMUDRA-LEX home">
-        <span class="brand-mark" aria-hidden="true">SL</span>
-        <span>
-          <strong>SAMUDRA-LEX</strong>
-          <small>MARITIME LAW-ENFORCEMENT SUPPORT</small>
-        </span>
-      </a>
-      <div class="status-indicator" aria-label="Application status">
-        <span class="status-dot" aria-hidden="true"></span>
-        FOUNDATION MODE
-      </div>
-    </div>
-  </header>
-
-  <main class="app-shell">
-    <section class="intro" aria-labelledby="page-title">
-      <p class="eyebrow">Operational situation analysis</p>
-      <h1 id="page-title">Describe the situation</h1>
-      <p class="intro-copy">Record the facts as they are currently known. SAMUDRA-LEX will identify possible operational scenario categories and check the available verified legal data.</p>
-    </section>
-
-    <section class="analysis-panel" aria-labelledby="input-heading">
-      <div class="panel-heading">
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+      <div class="sidebar-header">
+        <div class="brand-mark" aria-hidden="true">SL</div>
         <div>
-          <p class="section-label">01 / Situation input</p>
-          <h2 id="input-heading">What is happening?</h2>
+          <div class="brand-label">SAMUDRA-LEX</div>
+          <div class="brand-subtitle">MARITIME LAW-ENFORCEMENT SUPPORT</div>
         </div>
-        <span class="input-hint">Use observable facts</span>
       </div>
-      <form id="analysis-form">
-        <label class="sr-only" for="situation-input">Describe the maritime law-enforcement situation</label>
-        <textarea id="situation-input" name="situation" rows="8" placeholder="Describe the situation, vessel, location, activity and suspected issue..." required></textarea>
-        <details class="case-details">
-          <summary>Case details</summary>
-          <div class="case-grid">
-            <label>Case ID<input id="case-id" type="text" readonly></label>
-            <label>Vessel name<input id="vessel-name" type="text"></label>
-            <label>IMO number<input id="imo-number" type="text"></label>
-            <label>Call sign<input id="call-sign" type="text"></label>
-            <label>Flag<input id="vessel-flag" type="text"></label>
-            <label>Vessel type<input id="vessel-type" type="text"></label>
-            <label>Owner<input id="vessel-owner" type="text"></label>
-            <label>Incident date/time<input id="incident-date-time" type="datetime-local"></label>
-            <label>Latitude<input id="latitude" type="text"></label>
-            <label>Longitude<input id="longitude" type="text"></label>
-            <label>Reported location<input id="reported-location" type="text"></label>
-            <label>Observed activity<input id="observed-activity" type="text" placeholder="fishing, sailing"></label>
-            <label>Maritime zone
-              <select id="maritime-zone"><option value="">Unknown</option><option value="territorial_waters">Territorial waters</option><option value="EEZ">EEZ</option></select>
-            </label>
-            <label>Position verified
-              <select id="position-verified"><option value="false">Unknown / not verified</option><option value="true">Confirmed</option></select>
-            </label>
-            <label>Distance from baseline<input id="distance-baseline" type="text"></label>
-            <label>Licence produced
-              <select id="licence-produced"><option value="">Unknown</option><option value="true">Yes</option><option value="false">No</option></select>
-            </label>
-            <label>Licence verified
-              <select id="licence-verified"><option value="false">No</option><option value="true">Yes</option></select>
-            </label>
-            <label>Permit produced
-              <select id="permit-produced"><option value="">Unknown</option><option value="true">Yes</option><option value="false">No</option></select>
-            </label>
-            <label>Permit verified
-              <select id="permit-verified"><option value="false">No</option><option value="true">Yes</option></select>
-            </label>
-            <label>Person role
-              <select id="person-role"><option value="">Unknown</option><option value="master">Master</option><option value="owner">Owner</option><option value="crew">Crew</option></select>
-            </label>
-            <label>Contravention
-              <select id="conduct-contravention"><option value="">Unknown</option><option value="true">Confirmed</option><option value="false">Disproved</option></select>
-            </label>
-            <label>Licence violation
-              <select id="conduct-licence"><option value="">Unknown</option><option value="true">Confirmed</option><option value="false">Disproved</option></select>
-            </label>
-            <label>Permit violation
-              <select id="conduct-permit"><option value="">Unknown</option><option value="true">Confirmed</option><option value="false">Disproved</option></select>
-            </label>
-            <label>Failure to stop
-              <select id="conduct-stop"><option value="">Unknown</option><option value="true">Confirmed</option><option value="false">Disproved</option></select>
-            </label>
-            <label>Obstruction
-              <select id="conduct-obstruction"><option value="">Unknown</option><option value="true">Confirmed</option><option value="false">Disproved</option></select>
-            </label>
-          </div>
-          <div class="saved-case-tools">
-            <label>Saved cases<select id="saved-case-select"><option value="">Select a saved case</option></select></label>
-            <button id="load-case" class="text-button" type="button">Load saved case</button>
-          </div>
-          <fieldset class="evidence-entry">
-            <legend>Evidence register</legend>
-            <div class="case-grid">
-              <label>Type<select id="evidence-type"><option>Photograph</option><option>Video</option><option>GPS / position data</option><option>AIS data</option><option>Vessel document</option><option>Licence</option><option>Permit</option><option>Statement</option><option>Boarding report</option><option>Inspection report</option><option>Other</option></select></label>
-              <label>Description<input id="evidence-description" type="text"></label>
-              <label>Related condition ID<input id="evidence-condition" type="text"></label>
-              <label>Verified<select id="evidence-verified"><option value="false">No</option><option value="true">Yes</option></select></label>
+
+      <nav class="sidebar-nav" aria-label="Sections">
+        <button class="nav-item active" type="button" data-nav="dashboard">Dashboard</button>
+        <button class="nav-item" type="button" data-nav="situation-analysis">Situation Analysis</button>
+        <button class="nav-item" type="button" data-nav="boarding-assistant">Boarding Assistant</button>
+        <button class="nav-item" type="button" data-nav="acts-sections">Acts &amp; Sections</button>
+        <button class="nav-item" type="button" data-nav="offence-finder">Offence Finder</button>
+        <button class="nav-item" type="button" data-nav="legal-verification">Legal Verification</button>
+        <button class="nav-item" type="button" data-nav="evidence-register">Evidence Register</button>
+        <button class="nav-item" type="button" data-nav="saved-cases">Saved Cases</button>
+        <button class="nav-item" type="button" data-nav="legal-sources">Legal Sources</button>
+        <button class="nav-item" type="button" data-nav="settings">Settings</button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="mini-status online">● OFFLINE</div>
+        <div>Database status</div>
+        <div>Legal database version</div>
+        <div>Application version</div>
+      </div>
+    </aside>
+
+    <div class="main-panel">
+      <header class="topbar">
+        <div>
+          <p class="section-label">SAMUDRA-LEX</p>
+          <h1>MARITIME LAW-ENFORCEMENT SUPPORT</h1>
+        </div>
+        <button class="mobile-menu-button" type="button" aria-label="Toggle navigation">☰</button>
+      </header>
+
+      <main class="workspace">
+        <section class="view active" data-view="dashboard">
+          <div class="page-header">
+            <div>
+              <p class="eyebrow">Offline operational legal decision-support system</p>
+              <h2>Operational dashboard</h2>
             </div>
-            <button id="add-evidence" class="text-button" type="button">Add evidence item</button>
-            <ul id="evidence-list" class="evidence-list"></ul>
-          </fieldset>
-        </details>
-        <div class="form-footer">
-          <p class="example-text"><span>Example</span> Foreign fishing vessel detected approximately 35 NM offshore. The vessel appears to be engaged in fishing and is unable to produce the required documents.</p>
-          <button class="primary-button" type="submit">Analyse situation <span aria-hidden="true">&#8594;</span></button>
-        </div>
-      </form>
-    </section>
+          </div>
 
-    <section id="results" class="results-panel" aria-live="polite" hidden>
-      <div class="results-heading">
-        <div>
-          <p class="section-label">02 / Initial assessment</p>
-          <h2>Analysis result</h2>
-        </div>
-        <div class="result-actions">
-          <button id="save-case" class="text-button" type="button">Save case</button>
-          <button id="new-analysis" class="text-button" type="button">New analysis <span aria-hidden="true">&#8599;</span></button>
-        </div>
-      </div>
-      <div id="result-content"></div>
-    </section>
-  </main>
+          <div class="dashboard-grid">
+            <button class="dashboard-card" type="button" data-action="open-situation">
+              <span class="card-kicker">01</span>
+              <strong>START SITUATION ANALYSIS</strong>
+            </button>
+            <button class="dashboard-card" type="button" data-action="open-boarding">
+              <span class="card-kicker">02</span>
+              <strong>START BOARDING ASSISTANT</strong>
+            </button>
+            <button class="dashboard-card" type="button" data-action="open-offence-finder">
+              <span class="card-kicker">03</span>
+              <strong>FIND AN OFFENCE</strong>
+            </button>
+            <button class="dashboard-card" type="button" data-action="open-acts">
+              <span class="card-kicker">04</span>
+              <strong>SEARCH ACT / SECTION</strong>
+            </button>
+            <button class="dashboard-card" type="button" data-action="open-verification">
+              <span class="card-kicker">05</span>
+              <strong>VERIFY LEGAL FINDING</strong>
+            </button>
+            <button class="dashboard-card" type="button" data-action="open-case-manager">
+              <span class="card-kicker">06</span>
+              <strong>CREATE / OPEN CASE</strong>
+            </button>
+            <button class="dashboard-card" type="button" data-action="open-evidence">
+              <span class="card-kicker">07</span>
+              <strong>EVIDENCE REGISTER</strong>
+            </button>
+            <button class="dashboard-card" type="button" data-action="open-saved-cases">
+              <span class="card-kicker">08</span>
+              <strong>SAVED CASES</strong>
+            </button>
+          </div>
 
-  <footer class="site-footer">
-    <p>Foundation version 0.1.0</p>
-    <p>Not a substitute for verified legal advice or operational orders.</p>
-  </footer>
+          <div class="quick-actions-panel">
+            <h3>QUICK ACTIONS</h3>
+            <div class="quick-actions">
+              <button class="secondary-button" type="button" data-action="new-situation">New Situation</button>
+              <button class="secondary-button" type="button" data-action="new-boarding-case">New Boarding Case</button>
+              <button class="secondary-button" type="button" data-action="search-legal-provision">Search Legal Provision</button>
+              <button class="secondary-button" type="button" data-action="verify-finding">Verify Finding</button>
+              <button class="secondary-button" type="button" data-action="open-saved-case">Open Saved Case</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" data-view="situation-analysis">
+          <div class="page-header">
+            <div>
+              <p class="eyebrow">FOUNDATION MODE</p>
+              <h2>Operational Situation Analysis</h2>
+            </div>
+          </div>
+
+          <div class="progress-indicator" aria-label="Situation analysis progress">
+            <div class="step complete">01<br><span>Describe the situation</span></div>
+            <div class="step complete">02<br><span>Identify operational scenario</span></div>
+            <div class="step complete">03<br><span>Determine applicable legal framework</span></div>
+            <div class="step complete">04<br><span>Verify relevant facts</span></div>
+            <div class="step complete">05<br><span>Determine legal finding</span></div>
+            <div class="step complete">06<br><span>Review evidence and action</span></div>
+          </div>
+
+          <section class="analysis-panel" aria-labelledby="input-heading">
+            <div class="panel-heading">
+              <div>
+                <p class="section-label">01 / Situation input</p>
+                <h3 id="input-heading">What is happening?</h3>
+              </div>
+              <span class="input-hint">Use observable facts</span>
+            </div>
+            <form id="analysis-form">
+              <label class="sr-only" for="situation-input">Describe the maritime law-enforcement situation</label>
+              <textarea id="situation-input" name="situation" rows="8" placeholder="Describe the situation, vessel, location, activity and suspected issue..." required></textarea>
+              <details class="case-details">
+                <summary>Case details</summary>
+                <div class="case-grid">
+                  <label>Case ID<input id="case-id" type="text" readonly></label>
+                  <label>Vessel name<input id="vessel-name" type="text"></label>
+                  <label>IMO number<input id="imo-number" type="text"></label>
+                  <label>Call sign<input id="call-sign" type="text"></label>
+                  <label>Flag<input id="vessel-flag" type="text"></label>
+                  <label>Vessel type<input id="vessel-type" type="text"></label>
+                  <label>Owner<input id="vessel-owner" type="text"></label>
+                  <label>Incident date/time<input id="incident-date-time" type="datetime-local"></label>
+                  <label>Latitude<input id="latitude" type="text"></label>
+                  <label>Longitude<input id="longitude" type="text"></label>
+                  <label>Reported location<input id="reported-location" type="text"></label>
+                  <label>Observed activity<input id="observed-activity" type="text" placeholder="fishing, sailing"></label>
+                  <label>Maritime zone
+                    <select id="maritime-zone"><option value="">Unknown</option><option value="territorial_waters">Territorial waters</option><option value="EEZ">EEZ</option></select>
+                  </label>
+                  <label>Position verified
+                    <select id="position-verified"><option value="false">Unknown / not verified</option><option value="true">Confirmed</option></select>
+                  </label>
+                  <label>Distance from baseline<input id="distance-baseline" type="text"></label>
+                  <label>Licence produced
+                    <select id="licence-produced"><option value="">Unknown</option><option value="true">Yes</option><option value="false">No</option></select>
+                  </label>
+                  <label>Licence verified
+                    <select id="licence-verified"><option value="false">No</option><option value="true">Yes</option></select>
+                  </label>
+                  <label>Permit produced
+                    <select id="permit-produced"><option value="">Unknown</option><option value="true">Yes</option><option value="false">No</option></select>
+                  </label>
+                  <label>Permit verified
+                    <select id="permit-verified"><option value="false">No</option><option value="true">Yes</option></select>
+                  </label>
+                  <label>Person role
+                    <select id="person-role"><option value="">Unknown</option><option value="master">Master</option><option value="owner">Owner</option><option value="crew">Crew</option></select>
+                  </label>
+                  <label>Contravention
+                    <select id="conduct-contravention"><option value="">Unknown</option><option value="true">Confirmed</option><option value="false">Disproved</option></select>
+                  </label>
+                  <label>Licence violation
+                    <select id="conduct-licence"><option value="">Unknown</option><option value="true">Confirmed</option><option value="false">Disproved</option></select>
+                  </label>
+                  <label>Permit violation
+                    <select id="conduct-permit"><option value="">Unknown</option><option value="true">Confirmed</option><option value="false">Disproved</option></select>
+                  </label>
+                  <label>Failure to stop
+                    <select id="conduct-stop"><option value="">Unknown</option><option value="true">Confirmed</option><option value="false">Disproved</option></select>
+                  </label>
+                  <label>Obstruction
+                    <select id="conduct-obstruction"><option value="">Unknown</option><option value="true">Confirmed</option><option value="false">Disproved</option></select>
+                  </label>
+                </div>
+                <div class="saved-case-tools">
+                  <label>Saved cases<select id="saved-case-select"><option value="">Select a saved case</option></select></label>
+                  <button id="load-case" class="text-button" type="button">Load saved case</button>
+                </div>
+                <fieldset class="evidence-entry">
+                  <legend>Evidence register</legend>
+                  <div class="case-grid">
+                    <label>Type<select id="evidence-type"><option>Photograph</option><option>Video</option><option>GPS / position data</option><option>AIS data</option><option>Vessel document</option><option>Licence</option><option>Permit</option><option>Statement</option><option>Boarding report</option><option>Inspection report</option><option>Other</option></select></label>
+                    <label>Description<input id="evidence-description" type="text"></label>
+                    <label>Related condition ID<input id="evidence-condition" type="text"></label>
+                    <label>Verified<select id="evidence-verified"><option value="false">No</option><option value="true">Yes</option></select></label>
+                  </div>
+                  <button id="add-evidence" class="text-button" type="button">Add evidence item</button>
+                  <ul id="evidence-list" class="evidence-list"></ul>
+                </fieldset>
+              </details>
+              <div class="form-footer">
+                <p class="example-text"><span>Example</span> Foreign fishing vessel detected approximately 35 NM offshore. The vessel appears to be engaged in fishing and is unable to produce the required documents.</p>
+                <button class="primary-button" type="submit">Analyse situation <span aria-hidden="true">&#8594;</span></button>
+              </div>
+            </form>
+          </section>
+
+          <section id="results" class="results-panel" aria-live="polite" hidden>
+            <div class="results-heading">
+              <div>
+                <p class="section-label">02 / Initial assessment</p>
+                <h3>Analysis result</h3>
+              </div>
+              <div class="result-actions">
+                <button id="save-case" class="text-button" type="button">Save case</button>
+                <button id="new-analysis" class="text-button" type="button">New analysis <span aria-hidden="true">&#8599;</span></button>
+              </div>
+            </div>
+            <div id="result-content"></div>
+          </section>
+        </section>
+
+        <section class="view" data-view="boarding-assistant">
+          <div class="page-header">
+            <div>
+              <p class="eyebrow">OPERATIONAL PREPAREDNESS</p>
+              <h2>BOARDING ASSISTANT</h2>
+            </div>
+          </div>
+          <div class="module-panel">
+            <form id="boarding-form" class="stack-form">
+              <fieldset>
+                <legend>VESSEL DETAILS</legend>
+                <div class="case-grid">
+                  <label>Vessel name<input type="text" id="board-vessel-name"></label>
+                  <label>Flag<input type="text" id="board-flag"></label>
+                  <label>Vessel type<input type="text" id="board-vessel-type"></label>
+                  <label>IMO / registration number<input type="text" id="board-imo"></label>
+                  <label>Master<input type="text" id="board-master"></label>
+                  <label>Owner/operator<input type="text" id="board-owner"></label>
+                </div>
+              </fieldset>
+              <fieldset>
+                <legend>POSITION</legend>
+                <div class="case-grid">
+                  <label>Latitude<input type="text" id="board-latitude"></label>
+                  <label>Longitude<input type="text" id="board-longitude"></label>
+                  <label>Distance from coast<input type="text" id="board-distance"></label>
+                  <label>Maritime zone<select id="board-zone"><option value="">Unknown</option><option value="territorial_waters">Territorial waters</option><option value="EEZ">EEZ</option></select></label>
+                  <label>Date/time<input type="datetime-local" id="board-datetime"></label>
+                </div>
+              </fieldset>
+              <fieldset>
+                <legend>ACTIVITY</legend>
+                <div class="inline-options">
+                  <label><input type="checkbox" name="activity" value="Fishing"> Fishing</label>
+                  <label><input type="checkbox" name="activity" value="Transit"> Transit</label>
+                  <label><input type="checkbox" name="activity" value="Cargo"> Cargo</label>
+                  <label><input type="checkbox" name="activity" value="Passenger"> Passenger</label>
+                  <label><input type="checkbox" name="activity" value="Other"> Other</label>
+                  <label><input type="checkbox" name="activity" value="Unknown"> Unknown</label>
+                </div>
+              </fieldset>
+              <fieldset>
+                <legend>DOCUMENTS</legend>
+                <div class="inline-options">
+                  <label><input type="checkbox" name="documents" value="Registration"> Registration</label>
+                  <label><input type="checkbox" name="documents" value="Licence"> Licence</label>
+                  <label><input type="checkbox" name="documents" value="Permit"> Permit</label>
+                  <label><input type="checkbox" name="documents" value="Passport / identity documents"> Passport/identity documents</label>
+                  <label><input type="checkbox" name="documents" value="Vessel documents"> Vessel documents</label>
+                  <label><input type="checkbox" name="documents" value="Other"> Other</label>
+                </div>
+              </fieldset>
+              <fieldset>
+                <legend>OBSERVATIONS</legend>
+                <textarea id="board-observations" rows="5" placeholder="Record observed conduct, documents, warnings, or other relevant operational facts."></textarea>
+              </fieldset>
+              <div class="module-actions">
+                <button type="button" class="primary-button" data-action="populate-situation-from-board">Populate situation analysis</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <section class="view" data-view="acts-sections">
+          <div class="page-header">
+            <div>
+              <p class="eyebrow">LEGAL REFERENCE</p>
+              <h2>ACTS &amp; SECTIONS</h2>
+            </div>
+          </div>
+          <div class="module-panel">
+            <div class="module-toolbar">
+              <label class="search-box">
+                <span>Search Act, Section, offence, keyword...</span>
+                <input type="search" id="acts-search" placeholder="Search Act, Section, offence, keyword...">
+              </label>
+              <div class="filter-row">
+                <select id="acts-filter-act"><option value="">Act</option></select>
+                <select id="acts-filter-zone"><option value="">Maritime zone</option><option value="territorial_waters">Territorial waters</option><option value="EEZ">EEZ</option></select>
+                <select id="acts-filter-subject"><option value="">Subject</option></select>
+              </div>
+            </div>
+            <div id="acts-results" class="list-panel"></div>
+          </div>
+        </section>
+
+        <section class="view" data-view="offence-finder">
+          <div class="page-header">
+            <div>
+              <p class="eyebrow">LEGAL ASSESSMENT</p>
+              <h2>OFFENCE FINDER</h2>
+            </div>
+          </div>
+          <div class="module-panel">
+            <form id="offence-form" class="stack-form">
+              <div class="case-grid">
+                <label>Activity<select id="finder-activity"><option value="">Unknown</option><option value="Fishing">Fishing</option><option value="Transit">Transit</option><option value="Cargo">Cargo</option><option value="Passenger">Passenger</option></select></label>
+                <label>Maritime zone<select id="finder-zone"><option value="">Unknown</option><option value="territorial_waters">Territorial waters</option><option value="EEZ">EEZ</option></select></label>
+                <label>Vessel type<input type="text" id="finder-vessel-type"></label>
+                <label>Licence/permit status<select id="finder-documents"><option value="">Unknown</option><option value="produced">Produced</option><option value="not-produced">Not produced</option></select></label>
+                <label>Document status<select id="finder-document-status"><option value="">Unknown</option><option value="verified">Verified</option><option value="unverified">Unverified</option></select></label>
+                <label>Conduct/contravention<select id="finder-contravention"><option value="">Unknown</option><option value="true">Confirmed</option><option value="false">Disproved</option></select></label>
+              </div>
+              <div class="module-actions">
+                <button type="submit" class="primary-button">Run offence engine</button>
+              </div>
+            </form>
+            <div id="offence-results" class="list-panel"></div>
+          </div>
+        </section>
+
+        <section class="view" data-view="legal-verification">
+          <div class="page-header">
+            <div>
+              <p class="eyebrow">TRACEABILITY</p>
+              <h2>LEGAL VERIFICATION</h2>
+            </div>
+          </div>
+          <div id="legal-verification-content" class="module-panel"></div>
+        </section>
+
+        <section class="view" data-view="evidence-register">
+          <div class="page-header">
+            <div>
+              <p class="eyebrow">EVIDENCE</p>
+              <h2>EVIDENCE REGISTER</h2>
+            </div>
+          </div>
+          <div class="module-panel">
+            <div class="case-grid evidence-entry-grid">
+              <label>Evidence ID<input id="evidence-id" type="text" value="EVD-001"></label>
+              <label>Evidence type<select id="evidence-register-type"><option>Photograph</option><option>Video</option><option>GPS / position data</option><option>Statement</option><option>Licence</option><option>Permit</option><option>Boarding report</option><option>Other</option></select></label>
+              <label>Description<input id="evidence-register-description" type="text"></label>
+              <label>Source<input id="evidence-register-source" type="text"></label>
+              <label>Date/time<input id="evidence-register-datetime" type="datetime-local"></label>
+              <label>Related fact<input id="evidence-register-fact" type="text"></label>
+              <label>Verification status<select id="evidence-register-status"><option>PENDING VERIFICATION</option><option>VERIFIED</option><option>REJECTED</option></select></label>
+              <label>Remarks<input id="evidence-register-remarks" type="text"></label>
+            </div>
+            <div class="module-actions">
+              <button type="button" class="primary-button" id="add-evidence-register-item">ADD EVIDENCE</button>
+              <button type="button" class="secondary-button" id="view-evidence-register-item">VIEW</button>
+              <button type="button" class="secondary-button" id="edit-evidence-register-item">EDIT</button>
+              <button type="button" class="secondary-button" id="delete-evidence-register-item">DELETE</button>
+            </div>
+            <div id="evidence-register-list" class="list-panel"></div>
+          </div>
+        </section>
+
+        <section class="view" data-view="saved-cases">
+          <div class="page-header">
+            <div>
+              <p class="eyebrow">CASE MANAGEMENT</p>
+              <h2>SAVED CASES</h2>
+            </div>
+          </div>
+          <div id="saved-cases-list" class="module-panel list-panel"></div>
+        </section>
+
+        <section class="view" data-view="legal-sources">
+          <div class="page-header">
+            <div>
+              <p class="eyebrow">LEGAL DATABASE</p>
+              <h2>LEGAL SOURCES</h2>
+            </div>
+          </div>
+          <div class="module-panel">
+            <div class="module-toolbar">
+              <label class="search-box">
+                <span>Search legal sources</span>
+                <input type="search" id="source-search" placeholder="Search source title, act, section">
+              </label>
+              <div class="filter-row">
+                <select id="source-filter-status"><option value="">All statuses</option><option value="VERIFIED_SOURCE">VERIFIED_SOURCE</option><option value="PENDING_VERIFICATION">PENDING_VERIFICATION</option></select>
+                <select id="source-sort"><option value="act">Sort by act</option><option value="section">Sort by section</option><option value="status">Sort by status</option></select>
+              </div>
+            </div>
+            <div id="legal-sources-list" class="list-panel"></div>
+          </div>
+        </section>
+
+        <section class="view" data-view="settings">
+          <div class="page-header">
+            <div>
+              <p class="eyebrow">SYSTEM</p>
+              <h2>SETTINGS</h2>
+            </div>
+          </div>
+          <div class="module-panel settings-panel">
+            <div class="settings-group">
+              <h3>Application Information</h3>
+              <dl>
+                <div><dt>Application</dt><dd>SAMUDRA-LEX</dd></div>
+                <div><dt>Version</dt><dd>0.1.0</dd></div>
+                <div><dt>Mode</dt><dd>Offline</dd></div>
+              </dl>
+            </div>
+            <div class="settings-group">
+              <h3>Database Information</h3>
+              <dl>
+                <div><dt>Legal Database Version</dt><dd>2026-09-09</dd></div>
+                <div><dt>Offline Status</dt><dd>OFFLINE</dd></div>
+                <div><dt>Database Status</dt><dd>CONNECTED / AVAILABLE</dd></div>
+              </dl>
+            </div>
+            <div class="settings-group">
+              <h3>UI Preferences</h3>
+              <button type="button" class="secondary-button" id="reset-ui-preferences">Reset UI Preferences</button>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="status-bar">
+        <span class="status-pill status-offline">● OFFLINE</span>
+        <span>LEGAL DATABASE: 2026-09-09</span>
+        <span>DATABASE STATUS: CONNECTED / AVAILABLE</span>
+        <span>APPLICATION: SAMUDRA-LEX</span>
+        <span>VERSION: 0.1.0</span>
+      </footer>
+    </div>
+  </div>
 
   <script type="module" src="js/app.js"></script>
 </body>
