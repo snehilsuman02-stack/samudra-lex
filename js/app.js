@@ -245,13 +245,27 @@ function renderConditionMapping(offence, evidenceGaps = [], caseEvidence = [], c
     const evidenceText = linkedEvidence.length
       ? linkedEvidence.map((item) => `${item.evidenceId || "Evidence"}: ${item.description || item.type || "Recorded evidence"}`).join("; ")
       : element.inputValue === undefined || element.inputValue === null
-        ? "EVIDENCE NOT PROVIDED"
+        ? conditionEvidenceContext(element, caseResult)
         : `FACT AVAILABLE: ${formatConditionValue(element.inputValue)}`;
     const status = formatConditionStatus(element.status);
     const verification = verificationByCondition.get(element.elementId) || evidenceGapByCondition.get(element.elementId)?.action || "Not required for this condition.";
     return `<div class="condition-row"><div><strong>CONDITION</strong><span>${escapeHtml(element.element || "Condition not described")}</span></div><div><strong>STATUS</strong><span class="condition-status ${conditionStatusClass(element.status)}">${escapeHtml(status)}</span></div><div><strong>EVIDENCE / FACT</strong><span>${escapeHtml(evidenceText)}</span></div><div><strong>SOURCE</strong><span>${escapeHtml(legalBasis.actId || "Not available")} / ${escapeHtml(legalBasis.sectionId || "Not available")}</span></div><div><strong>VERIFICATION</strong><span>${escapeHtml(verification)}</span></div></div>`;
   }).join("");
   return `<details class="condition-mapping"><summary>LEGAL CONDITIONS</summary><div class="condition-list">${rows}</div></details>`;
+}
+
+function conditionEvidenceContext(element, caseResult) {
+  const reason = `${element.element || ""} ${element.reason || ""}`;
+  const distance = caseResult.facts?.location?.distanceNm;
+  if (/maritime zone|geographical|location\.maritimeZone/i.test(reason) && distance !== null && distance !== undefined) {
+    return `Distance approximately ${distance} NM was entered, but maritime zone is not confirmed.`;
+  }
+  if (/licence|permit/i.test(reason) && (caseResult.licence?.produced === null || caseResult.licence?.produced === undefined) && (caseResult.permit?.produced === null || caseResult.permit?.produced === undefined)) {
+    return "Licence/permit status has not been verified.";
+  }
+  if (/role|owner|master/i.test(reason) && !caseResult.persons?.role) return "Person role is not recorded.";
+  if (/authorised officer/i.test(reason)) return "Authorised officer status is not recorded.";
+  return "EVIDENCE NOT PROVIDED";
 }
 
 function uniqueConditionElements(offence) {
@@ -755,13 +769,20 @@ function renderCaseAssessment(caseResult) {
   if (!caseResult?.assessment) return "";
   const assessment = caseResult.assessment;
   const offences = assessment.offences.length
-    ? assessment.offences.map((offence) => `<article class="case-offence"><h4>${escapeHtml(offence.name)}</h4><p class="case-status">${escapeHtml(offence.status)}</p><p>${escapeHtml(offence.reason)}</p><p class="statutory-label">LEGAL BASIS</p><p class="source-reference">${escapeHtml(offence.legalBasis.map((basis) => `${basis.actId} / ${basis.sectionId}`).join("; "))}</p>${renderConditionMapping(offence, assessment.evidenceGaps || [], currentCase.evidence || [])}<details><summary>Why this result?</summary>${renderDecisionTrace(offence)}</details></article>`).join("")
+    ? assessment.offences.map((offence) => `<article class="case-offence"><h4>${escapeHtml(offence.name)}</h4><p class="case-status">${escapeHtml(offence.status)}</p><p>${escapeHtml(offence.reason)}</p><p class="statutory-label">LEGAL BASIS</p><p class="source-reference">${escapeHtml(offence.legalBasis.map((basis) => `${basis.actId} / ${basis.sectionId}`).join("; "))}</p>${renderConditionMapping(offence, assessment.evidenceGaps || [], currentCase.evidence || [], caseResult)}<details><summary>Why this result?</summary>${renderDecisionTrace(offence)}</details></article>`).join("")
     : "<p>No applicable verified offence record was assessed.</p>";
   return `<div class="result-block case-assessment"><h3>CASE ASSESSMENT</h3><p class="case-final-status">${escapeHtml(assessment.overallStatus)}</p><p>${escapeHtml((assessment.reasons || []).map((item) => item.reason).join(" "))}</p><h4>APPLICABLE OFFENCE(S)</h4>${offences}<h4>FAILED CONDITIONS</h4>${renderList((assessment.failedConditions || []).map((item) => item.reason || item.description), "No failed conditions identified.")}<h4>VERIFICATION REQUIRED</h4>${renderList((assessment.verificationRequired || []).map((item) => item.action), "No unresolved conditions identified.")}<h4>EVIDENCE GAPS</h4>${renderList((assessment.evidenceGaps || []).map((item) => `${item.action} (${item.evidenceStatus})`), "No evidence gaps identified.")}</div>`;
 }
 
 function renderDecisionTrace(offence) {
-  return `<ol class="decision-trace">${offence.decisionTrace.map((entry) => `<li><strong>${escapeHtml(entry.description)}</strong><span>${escapeHtml(entry.evaluation || entry.status)}: ${escapeHtml(entry.reason)}</span></li>`).join("")}</ol>`;
+  const entries = (offence.decisionTrace || []).map((entry) => {
+    const description = String(entry?.description || "").trim();
+    const reason = String(entry?.reason || "").trim();
+    return { ...entry, description, reason, explanation: description || reason };
+  }).filter((entry) => entry.explanation);
+  return entries.length
+    ? `<ol class="decision-trace">${entries.map((entry) => `<li><strong>${escapeHtml(entry.explanation)}</strong>${entry.reason && entry.description ? `<span>${escapeHtml(entry.evaluation || entry.status || "UNKNOWN")}: ${escapeHtml(entry.reason)}</span>` : ""}</li>`).join("")}</ol>`
+    : "<p>No additional explanation is available for this finding.</p>";
 }
 
 function renderList(items, emptyText) {
