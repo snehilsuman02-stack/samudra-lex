@@ -148,6 +148,7 @@
             </div>
             <form id="analysis-form">
               <label class="sr-only" for="situation-input">Describe the maritime law-enforcement situation</label>
+              <p id="situation-transfer-status" class="boarding-populate-status" aria-live="polite"></p>
               <textarea id="situation-input" name="situation" rows="8" placeholder="Describe the situation, vessel, location, activity and suspected issue..." required></textarea>
               <details class="case-details">
                 <summary>Case details</summary>
@@ -330,6 +331,7 @@
               <div class="module-actions">
                 <button type="button" class="primary-button" data-action="populate-situation-from-board">Populate situation analysis</button>
               </div>
+              <p id="boarding-populate-status" class="boarding-populate-status" aria-live="polite"></p>
             </form>
           </div>
         </section>
@@ -523,6 +525,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/app.js?v=31"></script>
+  <script type="module" src="js/app.js?v=32"></script>
 </body>
 </html>

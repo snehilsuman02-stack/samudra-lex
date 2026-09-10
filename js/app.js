@@ -710,30 +710,68 @@ function handleNewCase() {
 }
 
 function populateSituationFromBoard() {
-  const activityValues = Array.from(document.querySelectorAll('input[name="activity"]:checked')).map((item) => item.value);
-  const documentValues = Array.from(document.querySelectorAll('input[name="documents"]:checked')).map((item) => item.value);
-  const description = [
-    document.querySelector("#board-vessel-name").value,
-    document.querySelector("#board-flag").value,
-    document.querySelector("#board-zone").value,
-    activityValues.join(", "),
-    document.querySelector("#board-observations").value
-  ].filter(Boolean).join(". ");
+  const status = document.querySelector("#boarding-populate-status");
+  const setStatus = (message, state) => {
+    if (!status) return;
+    status.className = `boarding-populate-status ${state}`;
+    status.textContent = message;
+  };
+  try {
+    setStatus("POPULATING SITUATION ANALYSIS...", "running");
+    const fieldValue = (selector) => document.querySelector(selector)?.value.trim() || "";
+    const activityValues = Array.from(document.querySelectorAll('input[name="activity"]:checked')).map((item) => item.value);
+    const documentValues = Array.from(document.querySelectorAll('input[name="documents"]:checked')).map((item) => item.value);
+    const boardObservations = fieldValue("#board-observations");
+    const suppliedValues = [
+      fieldValue("#board-vessel-name"), fieldValue("#board-flag"), fieldValue("#board-vessel-type"),
+      fieldValue("#board-imo"), fieldValue("#board-latitude"), fieldValue("#board-longitude"),
+      fieldValue("#board-distance"), fieldValue("#board-zone"), fieldValue("#board-datetime"),
+      boardObservations, ...activityValues, ...documentValues
+    ].filter(Boolean);
+    if (!suppliedValues.length) {
+      setStatus("NO BOARDING DATA AVAILABLE", "warning");
+      return;
+    }
 
-  input.value = description || "Boarding observation recorded.";
-  document.querySelector("#vessel-name").value = document.querySelector("#board-vessel-name").value;
-  document.querySelector("#vessel-flag").value = document.querySelector("#board-flag").value;
-  document.querySelector("#vessel-type").value = document.querySelector("#board-vessel-type").value;
-  document.querySelector("#imo-number").value = document.querySelector("#board-imo").value;
-  document.querySelector("#observed-activity").value = activityValues.join(", ");
-  document.querySelector("#maritime-zone").value = document.querySelector("#board-zone").value;
-  document.querySelector("#incident-date-time").value = document.querySelector("#board-datetime").value;
-  document.querySelector("#latitude").value = document.querySelector("#board-latitude").value;
-  document.querySelector("#longitude").value = document.querySelector("#board-longitude").value;
-  document.querySelector("#distance-baseline").value = document.querySelector("#board-distance").value;
-  document.querySelector("#person-role").value = "master";
-  document.querySelector("#evidence-description").value = documentValues.join(", ") || "Boarding documents observed.";
-  showModule("situation-analysis");
+    const description = [
+      fieldValue("#board-vessel-name"),
+      fieldValue("#board-flag"),
+      fieldValue("#board-zone"),
+      activityValues.join(", "),
+      boardObservations
+    ].filter(Boolean).join(". ");
+    if (description) input.value = description;
+
+    const copyValue = (target, source) => {
+      const value = fieldValue(source);
+      if (value) document.querySelector(target).value = value;
+    };
+    copyValue("#vessel-name", "#board-vessel-name");
+    copyValue("#vessel-flag", "#board-flag");
+    copyValue("#vessel-type", "#board-vessel-type");
+    copyValue("#imo-number", "#board-imo");
+    copyValue("#incident-date-time", "#board-datetime");
+    copyValue("#latitude", "#board-latitude");
+    copyValue("#longitude", "#board-longitude");
+    copyValue("#distance-baseline", "#board-distance");
+    if (activityValues.length) document.querySelector("#observed-activity").value = activityValues.join(", ");
+    if (fieldValue("#board-zone")) document.querySelector("#maritime-zone").value = fieldValue("#board-zone");
+    if (documentValues.length) document.querySelector("#evidence-description").value = documentValues.join(", ");
+
+    currentCase = readCaseFromForm();
+    renderOperationalSummary();
+    renderCaseWorkspace();
+    setStatus("SITUATION ANALYSIS POPULATED", "completed");
+    const destinationStatus = document.querySelector("#situation-transfer-status");
+    if (destinationStatus) {
+      destinationStatus.className = "boarding-populate-status completed";
+      destinationStatus.textContent = "SITUATION ANALYSIS POPULATED";
+    }
+    showModule("situation-analysis");
+  } catch (error) {
+    console.error("SAMUDRA-LEX boarding transfer error", error);
+    setStatus("UNABLE TO POPULATE SITUATION ANALYSIS", "error");
+  }
 }
 
 function showModule(name) {
