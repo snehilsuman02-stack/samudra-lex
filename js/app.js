@@ -16,12 +16,17 @@ let currentCase = createCase();
 let evidenceItems = [];
 let latestAnalysis = null;
 let legalRecords = [];
+let legalActs = [];
+let selectedActId = null;
+let selectedSectionId = null;
 
 initialize();
 
 async function initialize() {
   try {
-    legalRecords = await loadLegalRecords();
+    const legalData = await loadLegalRecords();
+    legalActs = legalData.acts;
+    legalRecords = legalData.records;
     document.querySelector("#case-id").value = currentCase.caseId;
     wireNavigation();
     wireDashboardActions();
@@ -34,16 +39,19 @@ async function initialize() {
     wireSavedCases();
     wireSettings();
     wireCaseWorkspace();
+    wireActsBrowser();
     renderSavedCases();
     renderLegalSources();
     renderVerificationModule();
     renderEvidenceRegisterList();
     renderOperationalSummary();
     renderCaseWorkspace();
+    renderActsBrowser();
     showModule("dashboard");
   } catch (error) {
     console.error("SAMUDRA-LEX initialization failed", error);
     legalRecords = [];
+    legalActs = [];
     showModule("dashboard");
     renderOperationalSummary();
   }
@@ -221,11 +229,82 @@ function wireActsSearch() {
   const offenceFilter = document.querySelector("#acts-filter-offence");
 
   if (!actsSearch || !actFilter || !sectionFilter || !offenceFilter) return;
-  actsSearch.addEventListener("input", renderLegalReferenceResults);
+  actsSearch.addEventListener("input", () => {
+    selectedActId = null;
+    selectedSectionId = null;
+    renderLegalReferenceResults();
+  });
   actFilter.addEventListener("change", renderLegalReferenceResults);
   sectionFilter.addEventListener("change", renderLegalReferenceResults);
   offenceFilter.addEventListener("change", renderLegalReferenceResults);
+  actFilter.addEventListener("change", () => {
+    selectedActId = actFilter.value || null;
+    selectedSectionId = null;
+    renderActsBrowser();
+  });
   renderLegalReferenceResults();
+}
+
+function wireActsBrowser() {
+  const browser = document.querySelector("#acts-browser");
+  const details = document.querySelector("#acts-details");
+  if (!browser || !details) return;
+  browser.addEventListener("click", (event) => {
+    const actButton = event.target.closest("button[data-act-id]");
+    const sectionButton = event.target.closest("button[data-section-id]");
+    const backActs = event.target.closest("button[data-acts-back]");
+    const backDashboard = event.target.closest("button[data-acts-dashboard]");
+    if (backDashboard) {
+      showModule("dashboard");
+      return;
+    }
+    if (backActs) {
+      selectedSectionId = null;
+      renderActsBrowser();
+      history.pushState({ actsLevel: "acts" }, "", "#acts");
+      return;
+    }
+    if (actButton) {
+      selectedActId = actButton.dataset.actId;
+      selectedSectionId = null;
+      renderActsBrowser();
+      history.pushState({ actsLevel: "act", actId: selectedActId }, "", `#acts/${selectedActId}`);
+      return;
+    }
+    if (sectionButton) {
+      selectedSectionId = sectionButton.dataset.sectionId;
+      renderActsBrowser();
+      history.pushState({ actsLevel: "section", actId: selectedActId, sectionId: selectedSectionId }, "", `#acts/${selectedActId}/${selectedSectionId}`);
+    }
+  });
+  details.addEventListener("click", (event) => {
+    if (event.target.closest("button[data-acts-dashboard]")) {
+      showModule("dashboard");
+      return;
+    }
+    if (event.target.closest("button[data-acts-back]")) {
+      selectedSectionId = null;
+      renderActsBrowser();
+      history.pushState({ actsLevel: "act", actId: selectedActId }, "", `#acts/${selectedActId}`);
+    }
+  });
+  window.addEventListener("popstate", restoreActsHistory);
+}
+
+function restoreActsHistory(event) {
+  if (event.state?.actsLevel === "section") {
+    selectedActId = event.state.actId;
+    selectedSectionId = event.state.sectionId;
+    renderActsBrowser();
+  } else if (event.state?.actsLevel === "act") {
+    selectedActId = event.state.actId;
+    selectedSectionId = null;
+    renderActsBrowser();
+  } else if (event.state?.actsLevel === "acts") {
+    selectedActId = null;
+    selectedSectionId = null;
+    renderActsBrowser();
+  }
 }
 
 function wireCaseWorkspace() {
@@ -396,12 +475,20 @@ function populateSituationFromBoard() {
 }
 
 function showModule(name) {
+  if (name === "acts-sections") {
+    selectedActId = null;
+    selectedSectionId = null;
+    history.replaceState({ actsLevel: "acts" }, "", "#acts");
+  } else if (name === "dashboard") {
+    history.replaceState(null, "", window.location.pathname + window.location.search);
+  }
   document.querySelectorAll(".view").forEach((view) => {
     view.classList.toggle("active", view.dataset.view === name);
   });
   document.querySelectorAll(".nav-item").forEach((button) => {
     button.classList.toggle("active", button.dataset.nav === name);
   });
+  if (name === "acts-sections") renderActsBrowser();
 }
 
 function renderCaseWorkspace() {
@@ -438,6 +525,68 @@ function renderCaseWorkspace() {
     const panel = document.querySelector(`[data-case-panel="${name}"]`);
     if (panel) panel.innerHTML = markup;
   });
+}
+
+function renderActsBrowser() {
+  const browser = document.querySelector("#acts-browser");
+  const details = document.querySelector("#acts-details");
+  const breadcrumb = document.querySelector("#acts-breadcrumb");
+  if (!browser || !details || !breadcrumb) return;
+
+  const selectedAct = legalActs.find((act) => act.id === selectedActId);
+  const selectedSection = legalRecords.find((record) => record.sectionId === selectedSectionId);
+  if (selectedSection) {
+    breadcrumb.textContent = `ACTS / ${selectedSection.act} / SECTION ${selectedSection.section}`;
+    browser.hidden = true;
+    details.hidden = false;
+    details.innerHTML = renderSectionDetails(selectedSection);
+    return;
+  }
+
+  details.hidden = true;
+  browser.hidden = false;
+  if (selectedAct) {
+    const sections = legalRecords.filter((record) => record.actId === selectedAct.id);
+    breadcrumb.textContent = `ACTS / ${selectedAct.actName || selectedAct.id}`;
+    browser.innerHTML = `<div class="acts-browser-heading"><div><h3>${escapeHtml(selectedAct.actName || selectedAct.id)}</h3><span class="status-badge ${selectedAct.status === "VERIFIED_SOURCE" ? "established" : "pending"}">${escapeHtml(selectedAct.status || "NOT AVAILABLE")}</span></div><button class="secondary-button" type="button" data-acts-back>Back to Acts</button></div>${sections.length ? `<div class="acts-section-list">${sections.map(renderSectionButton).join("")}</div>` : "<div class=\"list-row\"><p>NO VERIFIED SECTIONS AVAILABLE FOR THIS ACT</p></div>"}`;
+    return;
+  }
+
+  breadcrumb.textContent = "ACTS";
+  if (!legalActs.length) {
+    browser.innerHTML = `<div class="list-row"><p>NO VERIFIED ACTS AVAILABLE</p></div>`;
+    return;
+  }
+  const query = document.querySelector("#acts-search")?.value.trim().toLowerCase() || "";
+  const actFilter = document.querySelector("#acts-filter-act")?.value || "";
+  const sectionFilter = document.querySelector("#acts-filter-section")?.value || "";
+  const offenceFilter = document.querySelector("#acts-filter-offence")?.value || "";
+  const matchingRecords = legalRecords.filter((record) => {
+    const haystack = `${record.act} ${record.section} ${record.title} ${record.offenceNames.join(" ")} ${record.text}`.toLowerCase();
+    return (!query || query.split(/\s+/).every((term) => haystack.includes(term)))
+      && (!actFilter || record.actId === actFilter)
+      && (!sectionFilter || record.sectionId === sectionFilter)
+      && (!offenceFilter || record.offences.includes(offenceFilter));
+  });
+  const matchingActs = legalActs.filter((act) => !actFilter || act.id === actFilter).filter((act) => !query || `${act.actName} ${act.shortName}`.toLowerCase().split(/\s+/).some((term) => query.split(/\s+/).includes(term)) || matchingRecords.some((record) => record.actId === act.id));
+  browser.innerHTML = matchingActs.length
+    ? `<div class="acts-browser-heading"><div><h3>AVAILABLE ACTS</h3><p>Select an Act to view its verified sections.</p></div><button class="secondary-button" type="button" data-acts-dashboard>Back to Dashboard</button></div><div class="acts-card-grid">${matchingActs.map(renderActButton).join("")}</div>${query || sectionFilter || offenceFilter ? `<div class="acts-search-results"><h3>SEARCH RESULTS</h3>${matchingRecords.length ? matchingRecords.map(renderSectionButton).join("") : "<div class=\"list-row\"><p>NO MATCHING VERIFIED LEGAL DATA FOUND</p></div>"}</div>` : ""}`
+    : `<div class="list-row"><p>NO MATCHING VERIFIED LEGAL DATA FOUND</p></div>`;
+}
+
+function renderActButton(act) {
+  const sectionCount = legalRecords.filter((record) => record.actId === act.id).length;
+  return `<button class="legal-browser-card" type="button" data-act-id="${escapeHtml(act.id)}"><span class="card-kicker">ACT</span><strong>${escapeHtml(act.actName || act.id)}</strong><span>${sectionCount ? `${sectionCount} available section${sectionCount === 1 ? "" : "s"}` : "NO VERIFIED SECTIONS AVAILABLE"}</span><span class="status-badge ${act.status === "VERIFIED_SOURCE" ? "established" : "pending"}">${escapeHtml(act.status || "NOT AVAILABLE")}</span></button>`;
+}
+
+function renderSectionButton(record) {
+  return `<button class="legal-section-button" type="button" data-section-id="${escapeHtml(record.sectionId)}"><span><strong>SECTION ${escapeHtml(record.section)}</strong><small>${escapeHtml(record.title)}</small></span><span class="status-badge ${record.verificationStatus === "VERIFIED_SOURCE" ? "established" : "pending"}">${escapeHtml(record.verificationStatus)}</span></button>`;
+}
+
+function renderSectionDetails(record) {
+  const value = (text) => text ? escapeHtml(text) : "NOT AVAILABLE IN VERIFIED DATABASE";
+  const offence = record.offenceRecords?.[0];
+  return `<div class="acts-details-heading"><div><p class="section-label">SECTION DETAILS</p><h3>${escapeHtml(record.title)}</h3></div><div class="module-actions"><button class="secondary-button" type="button" data-acts-back>Back to Acts</button><button class="secondary-button" type="button" data-acts-dashboard>Back to Dashboard</button></div></div><dl class="source-details"><dt>ACT</dt><dd>${value(record.act)}</dd><dt>SECTION NUMBER</dt><dd>${value(record.section)}</dd><dt>SECTION TITLE</dt><dd>${value(record.title)}</dd><dt>LEGAL TEXT / DESCRIPTION</dt><dd><div class="statutory-text">${value(record.text)}</div></dd><dt>OFFENCE</dt><dd>${value(offence?.name)}</dd><dt>PENALTY</dt><dd>${value(offence?.penalty)}</dd><dt>JURISDICTION</dt><dd>${value(record.jurisdiction)}</dd><dt>SOURCE</dt><dd>${value(record.source)}${record.sourceUrl ? `<br><a href="${escapeHtml(record.sourceUrl)}" target="_blank" rel="noreferrer">Official source</a>` : ""}</dd><dt>VERIFICATION STATUS</dt><dd><span class="status-badge ${record.verificationStatus === "VERIFIED_SOURCE" ? "established" : "pending"}">${escapeHtml(record.verificationStatus || "NOT AVAILABLE")}</span></dd></dl>`;
 }
 
 function renderWorkspaceOffences(assessment) {
@@ -710,6 +859,7 @@ function renderLegalReferenceResults() {
   resultsEl.innerHTML = filtered.length
     ? filtered.map(renderLegalRecord).join("")
     : `<div class="list-row"><p>NO VERIFIED LEGAL DATA FOUND</p></div>`;
+  renderActsBrowser();
 }
 
 async function loadLegalRecords() {
@@ -728,27 +878,32 @@ async function loadLegalRecords() {
     const sections = records;
     const acts = [coastGuardAct, fishingAct];
     const offenceNames = new Map((offenceData.offences || []).map((offence) => [offence.id, offence.name]));
+    const offenceRecords = new Map((offenceData.offences || []).map((offence) => [offence.id, offence]));
     const actMap = new Map(acts.map((act) => [act.id, act]));
-    return sections.map((section) => {
+    const normalizedRecords = sections.map((section) => {
       const act = actMap.get(section.actId) || {};
+      const sectionId = section.id || act.sections?.find((id) => String(id).endsWith(`-${section.sectionNumber}`)) || `${section.actId}-section-${section.sectionNumber}`;
       return {
         actId: section.actId,
         act: act.actName || section.actId,
-        sectionId: section.id,
+        sectionId,
         section: section.sectionNumber || section.id,
         title: section.title || "Untitled provision",
         text: section.text || "",
         source: section.source || act.source || "",
         sourceUrl: section.sourceUrl || act.sourceUrl || "",
         sourceStatus: act.status || section.status || "PENDING_VERIFICATION",
-        verificationStatus: section.verified && act.status === "VERIFIED_SOURCE" ? "VERIFIED_SOURCE" : "PENDING_VERIFICATION",
+        verificationStatus: (section.verified || section.status === "VERIFIED_SOURCE") && act.status === "VERIFIED_SOURCE" ? "VERIFIED_SOURCE" : "PENDING_VERIFICATION",
         lastVerified: section.lastVerified || act.lastVerified || "",
         offences: (section.relatedOffences || []).map((id) => id),
-        offenceNames: (section.relatedOffences || []).map((id) => offenceNames.get(id)).filter(Boolean)
+        offenceNames: (section.relatedOffences || []).map((id) => offenceNames.get(id)).filter(Boolean),
+        offenceRecords: (section.relatedOffences || []).map((id) => offenceRecords.get(id)).filter(Boolean),
+        jurisdiction: section.jurisdiction || act.jurisdiction || ""
       };
     });
+    return { acts, records: normalizedRecords };
   } catch {
-    return [];
+    return { acts: [], records: [] };
   }
 }
 

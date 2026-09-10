@@ -338,23 +338,26 @@
           <div class="page-header">
             <div>
               <p class="eyebrow">LEGAL REFERENCE</p>
-              <h2>SEARCH LAW</h2>
+              <h2>ACTS &amp; SECTIONS</h2>
             </div>
             <button class="secondary-button" type="button" data-action="back-dashboard">Back to Dashboard</button>
           </div>
           <div class="module-panel">
+            <div id="acts-breadcrumb" class="acts-breadcrumb" aria-live="polite">ACTS</div>
             <div class="module-toolbar">
               <label class="search-box">
-                <span>Enter Act, section, offence, keyword...</span>
+                <span>Search Acts and Sections</span>
                 <input type="search" id="acts-search" placeholder="Enter Act, section, offence, keyword...">
               </label>
               <div class="filter-row">
-                <select id="acts-filter-act"><option value="">ACT</option></select>
+                <select id="acts-filter-act"><option value="">ALL ACTS</option></select>
                 <select id="acts-filter-section"><option value="">SECTION</option></select>
                 <select id="acts-filter-offence"><option value="">OFFENCE</option></select>
               </div>
             </div>
-            <div id="acts-results" class="list-panel"></div>
+            <div id="acts-browser" class="acts-browser"></div>
+            <div id="acts-results" class="list-panel" hidden></div>
+            <div id="acts-details" class="acts-details" hidden></div>
           </div>
         </section>
 
@@ -501,6 +504,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/app.js?v=20"></script>
+  <script type="module" src="js/app.js?v=21"></script>
 </body>
 </html>
