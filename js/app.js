@@ -54,24 +54,27 @@ function wireNavigation() {
 
 function wireDashboardActions() {
   document.querySelectorAll("[data-action]").forEach((button) => {
-    const action = button.dataset.action;
-    if (action === "open-situation") showModule("situation-analysis");
-    if (action === "open-boarding") showModule("boarding-assistant");
-    if (action === "open-offence-finder") showModule("offence-finder");
-    if (action === "open-acts") showModule("acts-sections");
-    if (action === "open-verification") showModule("legal-verification");
-    if (action === "open-case-manager") showModule("saved-cases");
-    if (action === "open-evidence") showModule("evidence-register");
-    if (action === "open-saved-cases") showModule("saved-cases");
-    if (action === "new-situation") {
-      handleNewAnalysis();
-      showModule("situation-analysis");
-    }
-    if (action === "new-boarding-case") showModule("boarding-assistant");
-    if (action === "search-legal-provision") showModule("acts-sections");
-    if (action === "verify-finding") showModule("legal-verification");
-    if (action === "open-saved-case") showModule("saved-cases");
-    if (action === "populate-situation-from-board") populateSituationFromBoard();
+    button.addEventListener("click", () => {
+      const action = button.dataset.action;
+      if (action === "open-situation") showModule("situation-analysis");
+      if (action === "open-boarding") showModule("boarding-assistant");
+      if (action === "open-offence-finder") showModule("offence-finder");
+      if (action === "open-acts") showModule("acts-sections");
+      if (action === "open-verification") showModule("legal-verification");
+      if (action === "open-case-manager") showModule("saved-cases");
+      if (action === "open-evidence") showModule("evidence-register");
+      if (action === "open-saved-cases") showModule("saved-cases");
+      if (action === "new-situation") {
+        handleNewAnalysis();
+        showModule("situation-analysis");
+      }
+      if (action === "new-boarding-case") showModule("boarding-assistant");
+      if (action === "search-legal-provision") showModule("acts-sections");
+      if (action === "verify-finding") showModule("legal-verification");
+      if (action === "open-saved-case") showModule("saved-cases");
+      if (action === "populate-situation-from-board") populateSituationFromBoard();
+      if (action === "back-dashboard") showModule("dashboard");
+    });
   });
 }
 

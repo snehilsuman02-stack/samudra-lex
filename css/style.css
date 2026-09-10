@@ -34,6 +34,7 @@ a { color: inherit; }
 
 .sidebar {
   width: 280px;
+  min-height: 0;
   background: var(--navy);
   color: #dfeef3;
   padding: 28px 18px 18px;
@@ -43,6 +44,7 @@ a { color: inherit; }
   position: sticky;
   top: 0;
   height: 100vh;
+  overflow-y: auto;
 }
 
 .sidebar-header {
@@ -151,7 +153,7 @@ a { color: inherit; }
 .view { display: none; }
 .view.active { display: block; }
 
-.page-header { margin-bottom: 22px; }
+.page-header { margin-bottom: 22px; display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
 .eyebrow, .section-label {
   text-transform: uppercase;
   letter-spacing: 0.14em;
@@ -487,7 +489,7 @@ fieldset legend {
   .workspace, .topbar, .status-bar { padding-left: 20px; padding-right: 20px; }
   .dashboard-grid, .case-grid { grid-template-columns: 1fr; }
   .progress-indicator { grid-template-columns: 1fr; }
-  .form-footer, .panel-heading, .results-heading, .module-toolbar { display: block; }
+  .form-footer, .panel-heading, .results-heading, .module-toolbar, .page-header { display: block; }
   .primary-button { width: 100%; }
   .result-actions { display: block; }
   .status-bar { gap: 10px; }
