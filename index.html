@@ -24,6 +24,7 @@
         <button class="nav-item" type="button" data-nav="boarding-assistant">Boarding Assistant</button>
         <button class="nav-item" type="button" data-nav="acts-sections">Acts &amp; Sections</button>
         <button class="nav-item" type="button" data-nav="offence-finder">Offence Finder</button>
+        <button class="nav-item" type="button" data-nav="case-workspace">Case Workspace</button>
         <button class="nav-item" type="button" data-nav="legal-verification">Legal Verification</button>
         <button class="nav-item" type="button" data-nav="evidence-register">Evidence Register</button>
         <button class="nav-item" type="button" data-nav="saved-cases">Saved Cases</button>
@@ -68,38 +69,43 @@
             </button>
             <button class="dashboard-card" type="button" data-action="open-offence-finder">
               <span class="card-kicker">03</span>
-              <strong>FIND AN OFFENCE</strong>
+              <strong>OFFENCE ANALYSIS</strong>
             </button>
             <button class="dashboard-card" type="button" data-action="open-acts">
               <span class="card-kicker">04</span>
-              <strong>SEARCH ACT / SECTION</strong>
+              <strong>SEARCH LAW</strong>
             </button>
-            <button class="dashboard-card" type="button" data-action="open-verification">
+            <button class="dashboard-card" type="button" data-action="open-case-workspace">
               <span class="card-kicker">05</span>
-              <strong>VERIFY LEGAL FINDING</strong>
-            </button>
-            <button class="dashboard-card" type="button" data-action="open-case-manager">
-              <span class="card-kicker">06</span>
-              <strong>CREATE / OPEN CASE</strong>
+              <strong>CASE WORKSPACE</strong>
             </button>
             <button class="dashboard-card" type="button" data-action="open-evidence">
-              <span class="card-kicker">07</span>
+              <span class="card-kicker">06</span>
               <strong>EVIDENCE REGISTER</strong>
+            </button>
+            <button class="dashboard-card" type="button" data-action="open-sources">
+              <span class="card-kicker">07</span>
+              <strong>LEGAL SOURCES</strong>
             </button>
             <button class="dashboard-card" type="button" data-action="open-saved-cases">
               <span class="card-kicker">08</span>
               <strong>SAVED CASES</strong>
+            </button>
+            <button class="dashboard-card" type="button" data-action="open-verification">
+              <span class="card-kicker">09</span>
+              <strong>VERIFICATION / REVIEW</strong>
             </button>
           </div>
 
           <div class="quick-actions-panel">
             <h3>QUICK ACTIONS</h3>
             <div class="quick-actions">
-              <button class="secondary-button" type="button" data-action="new-situation">New Situation</button>
-              <button class="secondary-button" type="button" data-action="new-boarding-case">New Boarding Case</button>
-              <button class="secondary-button" type="button" data-action="search-legal-provision">Search Legal Provision</button>
-              <button class="secondary-button" type="button" data-action="verify-finding">Verify Finding</button>
-              <button class="secondary-button" type="button" data-action="open-saved-case">Open Saved Case</button>
+              <button class="secondary-button" type="button" data-action="new-case">New Case</button>
+              <button class="secondary-button" type="button" data-action="open-situation">Analyse Situation</button>
+              <button class="secondary-button" type="button" data-action="open-acts">Search Law</button>
+              <button class="secondary-button" type="button" data-action="open-offence-finder">Offence Analysis</button>
+              <button class="secondary-button" type="button" data-action="open-evidence">Evidence</button>
+              <button class="secondary-button" type="button" data-action="open-saved-cases">Saved Cases</button>
             </div>
           </div>
 
@@ -234,6 +240,36 @@
           </section>
         </section>
 
+        <section class="view" data-view="case-workspace">
+          <div class="page-header">
+            <div>
+              <p class="eyebrow">CASE MANAGEMENT</p>
+              <h2>CASE WORKSPACE</h2>
+            </div>
+            <div class="module-actions">
+              <button class="secondary-button" type="button" data-action="new-case">New Case</button>
+              <button class="secondary-button" type="button" data-action="back-dashboard">Back to Dashboard</button>
+            </div>
+          </div>
+          <div id="case-status-panel" class="case-status-panel"></div>
+          <div class="case-workspace-tabs" role="tablist" aria-label="Case workspace sections">
+            <button class="workspace-tab active" type="button" data-case-tab="case-details">Case Details</button>
+            <button class="workspace-tab" type="button" data-case-tab="situation">Situation</button>
+            <button class="workspace-tab" type="button" data-case-tab="legal-analysis">Legal Analysis</button>
+            <button class="workspace-tab" type="button" data-case-tab="offence-findings">Offence Findings</button>
+            <button class="workspace-tab" type="button" data-case-tab="case-evidence">Evidence</button>
+            <button class="workspace-tab" type="button" data-case-tab="case-sources">Legal Sources</button>
+            <button class="workspace-tab" type="button" data-case-tab="case-review">Review</button>
+          </div>
+          <div class="case-workspace-panel active" data-case-panel="case-details"></div>
+          <div class="case-workspace-panel" data-case-panel="situation"></div>
+          <div class="case-workspace-panel" data-case-panel="legal-analysis"></div>
+          <div class="case-workspace-panel" data-case-panel="offence-findings"></div>
+          <div class="case-workspace-panel" data-case-panel="case-evidence"></div>
+          <div class="case-workspace-panel" data-case-panel="case-sources"></div>
+          <div class="case-workspace-panel" data-case-panel="case-review"></div>
+        </section>
+
         <section class="view" data-view="boarding-assistant">
           <div class="page-header">
             <div>
@@ -302,20 +338,20 @@
           <div class="page-header">
             <div>
               <p class="eyebrow">LEGAL REFERENCE</p>
-              <h2>ACTS &amp; SECTIONS</h2>
+              <h2>SEARCH LAW</h2>
             </div>
             <button class="secondary-button" type="button" data-action="back-dashboard">Back to Dashboard</button>
           </div>
           <div class="module-panel">
             <div class="module-toolbar">
               <label class="search-box">
-                <span>Search Act, Section, offence, keyword...</span>
-                <input type="search" id="acts-search" placeholder="Search Act, Section, offence, keyword...">
+                <span>Enter Act, section, offence, keyword...</span>
+                <input type="search" id="acts-search" placeholder="Enter Act, section, offence, keyword...">
               </label>
               <div class="filter-row">
-                <select id="acts-filter-act"><option value="">Act</option></select>
-                <select id="acts-filter-zone"><option value="">Maritime zone</option><option value="territorial_waters">Territorial waters</option><option value="EEZ">EEZ</option></select>
-                <select id="acts-filter-subject"><option value="">Subject</option></select>
+                <select id="acts-filter-act"><option value="">ACT</option></select>
+                <select id="acts-filter-section"><option value="">SECTION</option></select>
+                <select id="acts-filter-offence"><option value="">OFFENCE</option></select>
               </div>
             </div>
             <div id="acts-results" class="list-panel"></div>
@@ -465,6 +501,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/app.js"></script>
+  <script type="module" src="js/app.js?v=20"></script>
 </body>
 </html>

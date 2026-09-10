@@ -377,6 +377,25 @@ textarea { min-height: 170px; resize: vertical; }
   border-radius: 16px;
   background: #fff;
 }
+.case-status-panel, .case-workspace-panel {
+  margin-top: 18px;
+  padding: 20px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 12px 26px rgba(17, 35, 47, 0.05);
+}
+.case-status-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
+.case-status-grid div { display: grid; gap: 6px; padding: 12px; background: var(--panel-alt); border: 1px solid var(--line); border-radius: 10px; }
+.case-status-grid strong { color: var(--muted); font-size: 0.7rem; letter-spacing: 0.08em; }
+.case-status-grid span { font-weight: 700; color: var(--navy); font-size: 0.82rem; }
+.case-workspace-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
+.workspace-tab { border: 1px solid var(--line); border-radius: 8px; background: var(--panel-alt); color: var(--muted); padding: 9px 12px; font-weight: 700; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.06em; }
+.workspace-tab.active { background: var(--teal); border-color: var(--teal); color: #fff; }
+.case-workspace-panel { display: none; }
+.case-workspace-panel.active { display: block; }
+.review-group + .review-group { margin-top: 22px; }
+.review-group h3 { color: var(--navy); font-size: 0.8rem; letter-spacing: 0.08em; }
 
 .module-panel { padding: 22px; }
 .module-toolbar {
@@ -470,6 +489,7 @@ fieldset legend {
   .dashboard-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .progress-indicator { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .case-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .case-status-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 @media (max-width: 800px) {
@@ -488,6 +508,7 @@ fieldset legend {
   .mobile-menu-button { display: grid; place-items: center; }
   .workspace, .topbar, .status-bar { padding-left: 20px; padding-right: 20px; }
   .dashboard-grid, .case-grid { grid-template-columns: 1fr; }
+  .case-status-grid { grid-template-columns: 1fr 1fr; }
   .progress-indicator { grid-template-columns: 1fr; }
   .form-footer, .panel-heading, .results-heading, .module-toolbar, .page-header { display: block; }
   .primary-button { width: 100%; }

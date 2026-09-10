@@ -15,26 +15,38 @@ const mobileMenuButton = document.querySelector(".mobile-menu-button");
 let currentCase = createCase();
 let evidenceItems = [];
 let latestAnalysis = null;
+let legalRecords = [];
 
 initialize();
 
-function initialize() {
-  document.querySelector("#case-id").value = currentCase.caseId;
-  wireNavigation();
-  wireDashboardActions();
-  wireSituationForm();
-  wireBoardingAssistant();
-  wireOffenceFinder();
-  wireActsSearch();
-  wireEvidenceRegister();
-  wireSavedCases();
-  wireSettings();
-  renderSavedCases();
-  renderLegalSources();
-  renderVerificationModule();
-  renderEvidenceRegisterList();
-  renderOperationalSummary();
-  showModule("dashboard");
+async function initialize() {
+  try {
+    legalRecords = await loadLegalRecords();
+    document.querySelector("#case-id").value = currentCase.caseId;
+    wireNavigation();
+    wireDashboardActions();
+    wireSituationForm();
+    wireBoardingAssistant();
+    wireOffenceFinder();
+    populateLegalFilters();
+    wireActsSearch();
+    wireEvidenceRegister();
+    wireSavedCases();
+    wireSettings();
+    wireCaseWorkspace();
+    renderSavedCases();
+    renderLegalSources();
+    renderVerificationModule();
+    renderEvidenceRegisterList();
+    renderOperationalSummary();
+    renderCaseWorkspace();
+    showModule("dashboard");
+  } catch (error) {
+    console.error("SAMUDRA-LEX initialization failed", error);
+    legalRecords = [];
+    showModule("dashboard");
+    renderOperationalSummary();
+  }
 }
 
 function wireNavigation() {
@@ -62,6 +74,10 @@ function wireDashboardActions() {
       if (action === "open-acts") showModule("acts-sections");
       if (action === "open-verification") showModule("legal-verification");
       if (action === "open-case-manager") showModule("saved-cases");
+      if (action === "open-case-workspace") {
+        renderCaseWorkspace();
+        showModule("case-workspace");
+      }
       if (action === "open-evidence") showModule("evidence-register");
       if (action === "open-saved-cases") showModule("saved-cases");
       if (action === "new-situation") {
@@ -72,6 +88,11 @@ function wireDashboardActions() {
       if (action === "search-legal-provision") showModule("acts-sections");
       if (action === "verify-finding") showModule("legal-verification");
       if (action === "open-saved-case") showModule("saved-cases");
+      if (action === "open-sources") showModule("legal-sources");
+      if (action === "new-case") {
+        handleNewCase();
+        showModule("case-workspace");
+      }
       if (action === "populate-situation-from-board") populateSituationFromBoard();
       if (action === "back-dashboard") showModule("dashboard");
     });
@@ -92,6 +113,7 @@ function wireSituationForm() {
     renderVerificationModule();
     renderSavedCases();
     renderOperationalSummary();
+    renderCaseWorkspace();
     showModule("situation-analysis");
   });
 
@@ -102,6 +124,7 @@ function wireSituationForm() {
     saveCase(currentCase);
     renderSavedCases();
     renderOperationalSummary();
+    renderCaseWorkspace();
     saveCaseButton.textContent = "Case saved";
     setTimeout(() => { saveCaseButton.textContent = "Save case"; }, 1200);
   });
@@ -112,6 +135,7 @@ function wireSituationForm() {
     currentCase = saved;
     populateCaseForm(saved);
     renderOperationalSummary();
+    renderCaseWorkspace();
   });
 
   document.querySelector("#add-evidence").addEventListener("click", () => {
@@ -129,6 +153,7 @@ function wireSituationForm() {
     document.querySelector("#evidence-description").value = "";
     renderEvidenceList();
     renderEvidenceRegisterList();
+    renderCaseWorkspace();
   });
 }
 
@@ -192,22 +217,34 @@ function wireOffenceFinder() {
 function wireActsSearch() {
   const actsSearch = document.querySelector("#acts-search");
   const actFilter = document.querySelector("#acts-filter-act");
-  const zoneFilter = document.querySelector("#acts-filter-zone");
-  const subjectFilter = document.querySelector("#acts-filter-subject");
+  const sectionFilter = document.querySelector("#acts-filter-section");
+  const offenceFilter = document.querySelector("#acts-filter-offence");
 
+  if (!actsSearch || !actFilter || !sectionFilter || !offenceFilter) return;
   actsSearch.addEventListener("input", renderLegalReferenceResults);
   actFilter.addEventListener("change", renderLegalReferenceResults);
-  zoneFilter.addEventListener("change", renderLegalReferenceResults);
-  subjectFilter.addEventListener("change", renderLegalReferenceResults);
+  sectionFilter.addEventListener("change", renderLegalReferenceResults);
+  offenceFilter.addEventListener("change", renderLegalReferenceResults);
   renderLegalReferenceResults();
+}
+
+function wireCaseWorkspace() {
+  document.querySelectorAll("[data-case-tab]").forEach((tab) => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll("[data-case-tab]").forEach((item) => item.classList.toggle("active", item === tab));
+      document.querySelectorAll("[data-case-panel]").forEach((panel) => panel.classList.toggle("active", panel.dataset.casePanel === tab.dataset.caseTab));
+    });
+  });
 }
 
 function wireEvidenceRegister() {
   document.querySelector("#add-evidence-register-item").addEventListener("click", () => {
+    const description = document.querySelector("#evidence-register-description").value.trim();
+    if (!description) return;
     const entry = {
       evidenceId: document.querySelector("#evidence-id").value || `EVD-${Date.now()}`,
       type: document.querySelector("#evidence-register-type").value,
-      description: document.querySelector("#evidence-register-description").value,
+      description,
       source: document.querySelector("#evidence-register-source").value,
       dateTime: document.querySelector("#evidence-register-datetime").value,
       relatedFact: document.querySelector("#evidence-register-fact").value,
@@ -220,6 +257,7 @@ function wireEvidenceRegister() {
     renderEvidenceList();
     renderEvidenceRegisterList();
     renderOperationalSummary();
+    renderCaseWorkspace();
   });
 
   document.querySelector("#view-evidence-register-item").addEventListener("click", () => {
@@ -230,8 +268,19 @@ function wireEvidenceRegister() {
     const id = document.querySelector("#evidence-id").value;
     const index = currentCase.evidence.findIndex((item) => item.evidenceId === id);
     if (index >= 0) {
-      currentCase.evidence[index] = { ...currentCase.evidence[index], type: document.querySelector("#evidence-register-type").value };
+      currentCase.evidence[index] = {
+        ...currentCase.evidence[index],
+        type: document.querySelector("#evidence-register-type").value,
+        description: document.querySelector("#evidence-register-description").value,
+        source: document.querySelector("#evidence-register-source").value,
+        dateTime: document.querySelector("#evidence-register-datetime").value,
+        relatedFact: document.querySelector("#evidence-register-fact").value,
+        verificationStatus: document.querySelector("#evidence-register-status").value,
+        remarks: document.querySelector("#evidence-register-remarks").value,
+        verified: document.querySelector("#evidence-register-status").value === "VERIFIED"
+      };
       renderEvidenceRegisterList();
+      renderCaseWorkspace();
     }
   });
 
@@ -241,6 +290,7 @@ function wireEvidenceRegister() {
     evidenceItems = currentCase.evidence;
     renderEvidenceList();
     renderEvidenceRegisterList();
+    renderCaseWorkspace();
   });
 }
 
@@ -257,12 +307,14 @@ function wireSavedCases() {
       currentCase = match;
       populateCaseForm(match);
       renderOperationalSummary();
+      renderCaseWorkspace();
       showModule("situation-analysis");
     }
     if (action === "edit") {
       currentCase = match;
       populateCaseForm(match);
       renderOperationalSummary();
+      renderCaseWorkspace();
       showModule("situation-analysis");
     }
     if (action === "duplicate") {
@@ -308,6 +360,14 @@ function handleNewAnalysis() {
   input.focus();
 }
 
+function handleNewCase() {
+  handleNewAnalysis();
+  latestAnalysis = null;
+  renderVerificationModule();
+  renderCaseWorkspace();
+  renderSavedCases();
+}
+
 function populateSituationFromBoard() {
   const activityValues = Array.from(document.querySelectorAll('input[name="activity"]:checked')).map((item) => item.value);
   const documentValues = Array.from(document.querySelectorAll('input[name="documents"]:checked')).map((item) => item.value);
@@ -342,6 +402,61 @@ function showModule(name) {
   document.querySelectorAll(".nav-item").forEach((button) => {
     button.classList.toggle("active", button.dataset.nav === name);
   });
+}
+
+function renderCaseWorkspace() {
+  const statusPanel = document.querySelector("#case-status-panel");
+  if (!statusPanel) return;
+  const assessment = currentCase.assessment || {};
+  const hasSituation = Boolean(currentCase.incident?.description);
+  const hasAssessment = Boolean(assessment.overallStatus);
+  const hasEvidence = Array.isArray(currentCase.evidence) && currentCase.evidence.length > 0;
+  const reviewStatus = assessment.verificationRequired?.length ? "REQUIRES VERIFICATION" : hasAssessment ? "COMPLETED" : "NOT STARTED";
+  const statusRows = [
+    ["CASE ID", currentCase.caseId],
+    ["CASE STATUS", hasAssessment ? "IN PROGRESS" : hasSituation ? "IN PROGRESS" : "NOT STARTED"],
+    ["ANALYSIS STATUS", hasAssessment ? "COMPLETED" : hasSituation ? "IN PROGRESS" : "NOT STARTED"],
+    ["LEGAL STATUS", assessment.overallStatus || "NOT STARTED"],
+    ["EVIDENCE STATUS", hasEvidence ? "IN PROGRESS" : "NOT STARTED"],
+    ["REVIEW STATUS", reviewStatus]
+  ];
+  statusPanel.innerHTML = `<div class="case-status-grid">${statusRows.map(([label, value]) => `<div><strong>${label}</strong><span>${escapeHtml(value)}</span></div>`).join("")}</div><p class="disclaimer">Workflow statuses describe case progress only and are not legal conclusions.</p>`;
+
+  const assessmentText = hasAssessment ? assessment.overallStatus : "No analysis has been run for this case.";
+  const basis = (assessment.legalBasis || []).map((item) => `${item.actId} / ${item.sectionId}`).join("; ") || "Not available";
+  const reviewItems = assessment.verificationRequired || [];
+  const panels = {
+    "case-details": `<div class="tight-grid"><div><strong>CASE ID</strong><br>${escapeHtml(currentCase.caseId)}</div><div><strong>VESSEL</strong><br>${escapeHtml(currentCase.vessel?.name || "Unknown")}</div><div><strong>FLAG</strong><br>${escapeHtml(currentCase.vessel?.flag || "Unknown")}</div><div><strong>VESSEL TYPE</strong><br>${escapeHtml(currentCase.vessel?.vesselType || "Unknown")}</div><div><strong>CREATED</strong><br>${escapeHtml(currentCase.createdAt || "-")}</div><div><strong>UPDATED</strong><br>${escapeHtml(currentCase.updatedAt || "-")}</div></div>`,
+    situation: `<h3>SITUATION</h3><p>${escapeHtml(currentCase.incident?.description || "No situation has been recorded.")}</p>`,
+    "legal-analysis": `<h3>LEGAL ANALYSIS</h3><p>${escapeHtml(assessmentText)}</p><p><strong>LEGAL BASIS</strong><br>${escapeHtml(basis)}</p>`,
+    "offence-findings": renderWorkspaceOffences(assessment),
+    "case-evidence": currentCase.evidence?.length ? renderEvidenceRegisterListMarkup(currentCase.evidence) : "<p>No evidence has been recorded for this case.</p>",
+    "case-sources": legalRecords.length ? legalRecords.filter((record) => (assessment.legalBasis || []).some((basisItem) => basisItem.sectionId === record.sectionId)).map(renderLegalRecord).join("") || "<p>No linked legal sources are available.</p>" : "<p>NO VERIFIED LEGAL DATA FOUND</p>",
+    "case-review": renderReviewPanel(assessment)
+  };
+  Object.entries(panels).forEach(([name, markup]) => {
+    const panel = document.querySelector(`[data-case-panel="${name}"]`);
+    if (panel) panel.innerHTML = markup;
+  });
+}
+
+function renderWorkspaceOffences(assessment) {
+  const offences = assessment.offences || [];
+  if (!offences.length) return "<h3>OFFENCE FINDINGS</h3><p>No offence assessment is available.</p>";
+  return `<h3>OFFENCE FINDINGS</h3>${offences.map((offence) => `<div class="list-row"><header><h4>${escapeHtml(offence.name)}</h4><span class="status-badge ${statusClass(offence.status)}">${escapeHtml(offence.status)}</span></header><p><strong>LEGAL BASIS</strong><br>${escapeHtml((offence.legalBasis || []).map((item) => `${item.actId} / ${item.sectionId}`).join("; ") || "Not available")}</p><p><strong>FACTS / EVIDENCE</strong><br>${escapeHtml(offence.reason || "No structured reasoning available.")}</p><p><strong>VERIFICATION REQUIREMENT</strong><br>${escapeHtml((offence.verificationRequired || []).map((item) => item.action).join("; ") || "None identified")}</p></div>`).join("")}`;
+}
+
+function renderEvidenceRegisterListMarkup(items) {
+  return items.map((item) => `<div class="list-row"><header><h4>${escapeHtml(item.evidenceId || "EVIDENCE")}</h4><span class="status-badge ${item.verified ? "established" : "pending"}">${escapeHtml(item.verificationStatus || (item.verified ? "VERIFIED" : "PENDING VERIFICATION"))}</span></header><div class="tight-grid"><div><strong>EVIDENCE TYPE</strong><br>${escapeHtml(item.type || "Unknown")}</div><div><strong>DESCRIPTION</strong><br>${escapeHtml(item.description || "No description")}</div><div><strong>SOURCE</strong><br>${escapeHtml(item.source || "Local case register")}</div><div><strong>DATE / TIME</strong><br>${escapeHtml(item.dateTime || "-")}</div><div><strong>REMARKS</strong><br>${escapeHtml(item.remarks || "-")}</div></div></div>`).join("");
+}
+
+function renderReviewPanel(assessment) {
+  const offences = assessment.offences || [];
+  const verified = offences.filter((item) => item.status === "OFFENCE ESTABLISHED");
+  const requiresVerification = offences.filter((item) => item.status === "SUSPECTED / REQUIRES FURTHER VERIFICATION");
+  const notEstablished = offences.filter((item) => item.status === "NOT ESTABLISHED");
+  const renderGroup = (title, items, emptyText) => `<section class="review-group"><h3>${title}</h3>${items.length ? items.map((item) => `<div class="list-row"><header><h4>${escapeHtml(item.name)}</h4><span class="status-badge ${statusClass(item.status)}">${escapeHtml(item.status)}</span></header><p><strong>ITEM</strong><br>${escapeHtml(item.name)}</p><p><strong>LEGAL BASIS</strong><br>${escapeHtml((item.legalBasis || []).map((basis) => `${basis.actId} / ${basis.sectionId}`).join("; ") || "Not available")}</p><p><strong>REASON FOR VERIFICATION</strong><br>${escapeHtml(item.reason || "No structured reason available.")}</p><p><strong>REVIEW STATUS</strong><br>${title === "REQUIRES VERIFICATION" ? "PENDING REVIEW" : "RECORDED"}</p></div>`).join("") : `<p>${emptyText}</p>`}</section>`;
+  return `${renderGroup("VERIFIED", verified, "No verified findings recorded.")}${renderGroup("REQUIRES VERIFICATION", requiresVerification, "No findings currently require verification.")}${renderGroup("NOT ESTABLISHED", notEstablished, "No findings recorded as not established.")}<p class="disclaimer">Operational legal-enforcement support only. Verify applicable law, jurisdiction, facts and evidence before enforcement or legal action.</p>`;
 }
 
 function renderAnalysis(analysis, caseResult) {
@@ -579,41 +694,108 @@ function renderPowerAssessment(powerAssessment) {
 function renderLegalReferenceResults() {
   const query = document.querySelector("#acts-search").value.trim().toLowerCase();
   const actFilter = document.querySelector("#acts-filter-act").value;
-  const zoneFilter = document.querySelector("#acts-filter-zone").value;
-  const subjectFilter = document.querySelector("#acts-filter-subject").value;
+  const sectionFilter = document.querySelector("#acts-filter-section").value;
+  const offenceFilter = document.querySelector("#acts-filter-offence").value;
   const resultsEl = document.querySelector("#acts-results");
 
-  const records = [
-    { act: "Coast Guard Act, 1978", section: "121", subject: "Coast Guard powers", zone: "All", title: "Coast Guard Act, 1978 - Section 121", source: "VERIFIED_SOURCE", category: "Enforcement" },
-    { act: "Maritime Zones Act", section: "3", subject: "Foreign fishing vessel restrictions", zone: "Territorial waters", title: "Foreign fishing vessel restrictions", source: "VERIFIED_SOURCE", category: "Fishing regulation" },
-    { act: "Maritime Zones Act", section: "9", subject: "Authorised officer powers", zone: "EEZ", title: "Authorised officers and powers", source: "VERIFIED_SOURCE", category: "Search and seizure" },
-    { act: "Maritime Zones Act", section: "10", subject: "Offence provisions", zone: "Territorial waters", title: "Foreign fishing vessel offence provisions", source: "VERIFIED_SOURCE", category: "Offence" }
-  ];
-
-  const filtered = records.filter((record) => {
-    const matchesQuery = !query || `${record.act} ${record.section} ${record.title} ${record.subject}`.toLowerCase().includes(query);
-    const matchesAct = !actFilter || record.act.toLowerCase().includes(actFilter.toLowerCase());
-    const matchesZone = !zoneFilter || record.zone === "All" || record.zone.toLowerCase().includes(zoneFilter.toLowerCase());
-    const matchesSubject = !subjectFilter || record.subject.toLowerCase().includes(subjectFilter.toLowerCase());
-    return matchesQuery && matchesAct && matchesZone && matchesSubject;
+  const filtered = legalRecords.filter((record) => {
+    const haystack = `${record.act} ${record.section} ${record.title} ${record.offenceNames.join(" ")} ${record.text}`.toLowerCase();
+    const matchesQuery = !query || query.split(/\s+/).every((term) => haystack.includes(term));
+    const matchesAct = !actFilter || record.actId === actFilter;
+    const matchesSection = !sectionFilter || record.sectionId === sectionFilter;
+    const matchesOffence = !offenceFilter || record.offences.includes(offenceFilter);
+    return matchesQuery && matchesAct && matchesSection && matchesOffence;
   });
 
   resultsEl.innerHTML = filtered.length
-    ? filtered.map((record) => `
-      <div class="list-row">
-        <header>
-          <h4>${escapeHtml(record.act)}</h4>
-          <span class="status-badge established">${escapeHtml(record.source)}</span>
-        </header>
-        <div class="tight-grid">
-          <div><strong>SECTION</strong><br>${escapeHtml(record.section)}</div>
-          <div><strong>SUBJECT</strong><br>${escapeHtml(record.subject)}</div>
-          <div><strong>LEGAL PROVISION</strong><br>${escapeHtml(record.title)}</div>
-          <div><strong>SOURCE STATUS</strong><br>${escapeHtml(record.source)}</div>
-        </div>
-      </div>
-    `).join("")
-    : `<div class="list-row"><p>No matching legal provisions found.</p></div>`;
+    ? filtered.map(renderLegalRecord).join("")
+    : `<div class="list-row"><p>NO VERIFIED LEGAL DATA FOUND</p></div>`;
+}
+
+async function loadLegalRecords() {
+  const paths = [
+    "acts/coast-guard-act-1978.json",
+    "acts/maritime-zones-fishing-foreign-vessels-act-1981.json",
+    "sections/coast-guard-act-section-121.json",
+    "sections/mz-fishing-foreign-vessels-section-3.json",
+    "sections/mz-fishing-foreign-vessels-section-9.json",
+    "sections/mz-fishing-foreign-vessels-section-10.json",
+    "offences/mzi-fishing-act-1981-offences.json"
+  ];
+  try {
+    const [coastGuardAct, fishingAct, ...records] = await Promise.all(paths.map(loadAppJson));
+    const offenceData = records.pop();
+    const sections = records;
+    const acts = [coastGuardAct, fishingAct];
+    const offenceNames = new Map((offenceData.offences || []).map((offence) => [offence.id, offence.name]));
+    const actMap = new Map(acts.map((act) => [act.id, act]));
+    return sections.map((section) => {
+      const act = actMap.get(section.actId) || {};
+      return {
+        actId: section.actId,
+        act: act.actName || section.actId,
+        sectionId: section.id,
+        section: section.sectionNumber || section.id,
+        title: section.title || "Untitled provision",
+        text: section.text || "",
+        source: section.source || act.source || "",
+        sourceUrl: section.sourceUrl || act.sourceUrl || "",
+        sourceStatus: act.status || section.status || "PENDING_VERIFICATION",
+        verificationStatus: section.verified && act.status === "VERIFIED_SOURCE" ? "VERIFIED_SOURCE" : "PENDING_VERIFICATION",
+        lastVerified: section.lastVerified || act.lastVerified || "",
+        offences: (section.relatedOffences || []).map((id) => id),
+        offenceNames: (section.relatedOffences || []).map((id) => offenceNames.get(id)).filter(Boolean)
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
+async function loadAppJson(path) {
+  const response = await fetch(`data/${path}`);
+  if (!response.ok) throw new Error(`Unable to load legal record: ${path}`);
+  return response.json();
+}
+
+function populateLegalFilters() {
+  const actFilter = document.querySelector("#acts-filter-act");
+  const sectionFilter = document.querySelector("#acts-filter-section");
+  const offenceFilter = document.querySelector("#acts-filter-offence");
+  if (!actFilter || !sectionFilter || !offenceFilter) return;
+  actFilter.innerHTML = '<option value="">ACT</option>';
+  sectionFilter.innerHTML = '<option value="">SECTION</option>';
+  offenceFilter.innerHTML = '<option value="">OFFENCE</option>';
+  const acts = new Map();
+  const sections = new Map();
+  const offences = new Map();
+  legalRecords.forEach((record) => {
+    acts.set(record.actId, record.act);
+    sections.set(record.sectionId, `${record.section} — ${record.title}`);
+    record.offenceNames.forEach((name, index) => offences.set(record.offences[index], name));
+  });
+  acts.forEach((label, value) => actFilter.add(new Option(label, value)));
+  sections.forEach((label, value) => sectionFilter.add(new Option(label, value)));
+  offences.forEach((label, value) => offenceFilter.add(new Option(label, value)));
+}
+
+function renderLegalRecord(record) {
+  const status = record.verificationStatus || "PENDING_VERIFICATION";
+  return `<div class="list-row">
+    <header>
+      <h4>${escapeHtml(record.act)} — Section ${escapeHtml(record.section)}</h4>
+      <span class="status-badge ${status === "VERIFIED_SOURCE" ? "established" : "pending"}">${escapeHtml(status)}</span>
+    </header>
+    <div class="tight-grid">
+      <div><strong>ACT / REGULATION</strong><br>${escapeHtml(record.act)}</div>
+      <div><strong>SECTION</strong><br>${escapeHtml(record.section)}</div>
+      <div><strong>TITLE</strong><br>${escapeHtml(record.title)}</div>
+      <div><strong>SOURCE STATUS</strong><br>${escapeHtml(record.sourceStatus)}</div>
+      <div><strong>VERIFICATION STATUS</strong><br>${escapeHtml(status)}</div>
+      <div><strong>OFFENCE</strong><br>${escapeHtml(record.offenceNames.join("; ") || "Not linked")}</div>
+    </div>
+    <details><summary>View statutory text</summary><div class="statutory-text">${escapeHtml(record.text)}</div></details>
+  </div>`;
 }
 
 function renderLegalSources() {
@@ -622,16 +804,9 @@ function renderLegalSources() {
   const sortSelect = document.querySelector("#source-sort");
   const list = document.querySelector("#legal-sources-list");
 
-  const records = [
-    { act: "Coast Guard Act, 1978", section: "121", source: "India Code", databaseStatus: "CONNECTED / AVAILABLE", verificationStatus: "VERIFIED_SOURCE", versionDate: "2026-09-09" },
-    { act: "Maritime Zones (Fishing) Act, 1981", section: "3", source: "India Code", databaseStatus: "CONNECTED / AVAILABLE", verificationStatus: "VERIFIED_SOURCE", versionDate: "2026-09-09" },
-    { act: "Maritime Zones (Fishing) Act, 1981", section: "9", source: "India Code", databaseStatus: "CONNECTED / AVAILABLE", verificationStatus: "VERIFIED_SOURCE", versionDate: "2026-09-09" },
-    { act: "Maritime Zones (Fishing) Act, 1981", section: "10", source: "India Code", databaseStatus: "CONNECTED / AVAILABLE", verificationStatus: "VERIFIED_SOURCE", versionDate: "2026-09-09" }
-  ];
-
-  const filtered = records.filter((record) => {
+  const filtered = legalRecords.filter((record) => {
     const query = searchBox.value.trim().toLowerCase();
-    const matchesQuery = !query || `${record.act} ${record.section} ${record.source}`.toLowerCase().includes(query);
+    const matchesQuery = !query || `${record.act} ${record.section} ${record.title} ${record.source}`.toLowerCase().includes(query);
     const matchesStatus = !statusFilter.value || record.verificationStatus === statusFilter.value;
     return matchesQuery && matchesStatus;
   });
@@ -639,25 +814,10 @@ function renderLegalSources() {
   const sorted = filtered.sort((a, b) => {
     if (sortSelect.value === "status") return a.verificationStatus.localeCompare(b.verificationStatus);
     if (sortSelect.value === "section") return String(a.section).localeCompare(String(b.section));
-    return a.act.localeCompare(b.act);
+    return a.act.localeCompare(b.act) || a.section.localeCompare(b.section);
   });
 
-  list.innerHTML = sorted.map((record) => `
-    <div class="list-row">
-      <header>
-        <h4>${escapeHtml(record.act)}</h4>
-        <span class="status-badge ${record.verificationStatus === "VERIFIED_SOURCE" ? "established" : "pending"}">${escapeHtml(record.verificationStatus)}</span>
-      </header>
-      <div class="tight-grid">
-        <div><strong>ACT</strong><br>${escapeHtml(record.act)}</div>
-        <div><strong>SECTION</strong><br>${escapeHtml(record.section)}</div>
-        <div><strong>SOURCE</strong><br>${escapeHtml(record.source)}</div>
-        <div><strong>DATABASE STATUS</strong><br>${escapeHtml(record.databaseStatus)}</div>
-        <div><strong>VERIFICATION STATUS</strong><br>${escapeHtml(record.verificationStatus)}</div>
-        <div><strong>VERSION / DATE</strong><br>${escapeHtml(record.versionDate)}</div>
-      </div>
-    </div>
-  `).join("") || "<div class=\"list-row\"><p>No legal sources match the current filter.</p></div>";
+  list.innerHTML = sorted.map(renderLegalRecord).join("") || "<div class=\"list-row\"><p>NO VERIFIED LEGAL DATA FOUND</p></div>";
 
   searchBox.addEventListener("input", renderLegalSources);
   statusFilter.addEventListener("change", renderLegalSources);
@@ -702,22 +862,7 @@ function renderEvidenceRegisterList() {
   const container = document.querySelector("#evidence-register-list");
   if (!container) return;
   const rows = currentCase.evidence && currentCase.evidence.length
-    ? currentCase.evidence.map((item) => `
-      <div class="list-row">
-        <header>
-          <h4>${escapeHtml(item.evidenceId || "EVIDENCE")}</h4>
-          <span class="status-badge ${item.verified ? "established" : "pending"}">${escapeHtml((item.verificationStatus || (item.verified ? "VERIFIED" : "PENDING VERIFICATION")))}</span>
-        </header>
-        <div class="tight-grid">
-          <div><strong>EVIDENCE TYPE</strong><br>${escapeHtml(item.type || "Unknown")}</div>
-          <div><strong>DESCRIPTION</strong><br>${escapeHtml(item.description || "No description")}</div>
-          <div><strong>SOURCE</strong><br>${escapeHtml(item.source || "Local case register")}</div>
-          <div><strong>DATE/TIME</strong><br>${escapeHtml(item.dateTime || "-")}</div>
-          <div><strong>RELATED FACT</strong><br>${escapeHtml(item.relatedFact || item.relatedConditionId || "-")}</div>
-          <div><strong>REMARKS</strong><br>${escapeHtml(item.remarks || "-")}</div>
-        </div>
-      </div>
-    `).join("")
+    ? renderEvidenceRegisterListMarkup(currentCase.evidence)
     : `<div class="list-row"><p>No evidence has been recorded for the current case.</p></div>`;
   container.innerHTML = rows;
 }
