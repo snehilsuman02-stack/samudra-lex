@@ -19,6 +19,8 @@ let legalRecords = [];
 let legalActs = [];
 let selectedActId = null;
 let selectedSectionId = null;
+let offenceFinderResult = null;
+let selectedOffenceIndex = null;
 
 initialize();
 
@@ -176,6 +178,9 @@ function wireBoardingAssistant() {
 function wireOffenceFinder() {
   const formEl = document.querySelector("#offence-form");
   const resultsEl = document.querySelector("#offence-results");
+  const offenceList = document.querySelector("#offence-list");
+  const offenceDetail = document.querySelector("#offence-detail");
+  if (!formEl || !offenceList || !offenceDetail) return;
   formEl.addEventListener("submit", async (event) => {
     event.preventDefault();
     const candidate = createCase({
@@ -196,9 +201,115 @@ function wireOffenceFinder() {
       }
     });
     const caseResult = await assessCase(candidate);
-    const assessment = caseResult.assessment || {};
-    resultsEl.innerHTML = renderOffenceFinderResults(assessment, caseResult);
+    currentCase = caseResult;
+    renderOperationalSummary();
+    renderCaseWorkspace();
+    offenceFinderResult = caseResult;
+    selectedOffenceIndex = null;
+    renderOffenceFinderList();
+    renderOffenceFinderDetail();
   });
+  document.querySelector("#offence-search").addEventListener("input", renderOffenceFinderList);
+  document.querySelector("#offence-filter-act").addEventListener("change", renderOffenceFinderList);
+  document.querySelector("#offence-filter-section").addEventListener("change", renderOffenceFinderList);
+  document.querySelector("#offence-filter-status").addEventListener("change", renderOffenceFinderList);
+  document.querySelector("#offence-filter-scenario").addEventListener("change", renderOffenceFinderList);
+  document.querySelector("#clear-offence-filters").addEventListener("click", () => {
+    ["#offence-search", "#offence-filter-act", "#offence-filter-section", "#offence-filter-status", "#offence-filter-scenario"].forEach((selector) => { document.querySelector(selector).value = ""; });
+    renderOffenceFinderList();
+  });
+  offenceList.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-offence-index]");
+    if (!button) return;
+    selectedOffenceIndex = Number(button.dataset.offenceIndex);
+    renderOffenceFinderDetail();
+  });
+  offenceDetail.addEventListener("click", (event) => {
+    const action = event.target.closest("button[data-offence-action]")?.dataset.offenceAction;
+    if (action === "back") {
+      selectedOffenceIndex = null;
+      renderOffenceFinderDetail();
+    }
+    if (action === "case-workspace") showModule("case-workspace");
+    if (action === "evidence") showModule("evidence-register");
+    if (action === "situation") showModule("situation-analysis");
+  });
+  renderOffenceFinderList();
+}
+
+function renderOffenceFinderList() {
+  const list = document.querySelector("#offence-list");
+  if (!list) return;
+  const offences = offenceFinderResult?.assessment?.offences || [];
+  populateOffenceFinderFilters(offences);
+  const query = document.querySelector("#offence-search")?.value.trim().toLowerCase() || "";
+  const actFilter = document.querySelector("#offence-filter-act")?.value || "";
+  const sectionFilter = document.querySelector("#offence-filter-section")?.value || "";
+  const statusFilter = document.querySelector("#offence-filter-status")?.value || "";
+  const scenarioFilter = document.querySelector("#offence-filter-scenario")?.value || "";
+  const scenarios = offenceFinderResult?.scenarios || [];
+  const filtered = offences.map((offence, index) => ({ offence, index })).filter(({ offence }) => {
+    const basis = offence.legalBasis?.[0] || {};
+    const record = legalRecords.find((item) => item.sectionId === basis.sectionId);
+    const searchText = `${offence.name} ${basis.actId} ${basis.sectionId} ${record?.act || ""} ${record?.section || ""} ${offence.reason || ""}`.toLowerCase();
+    return (!query || query.split(/\s+/).every((term) => searchText.includes(term)))
+      && (!actFilter || basis.actId === actFilter)
+      && (!sectionFilter || basis.sectionId === sectionFilter)
+      && (!statusFilter || offence.status === statusFilter)
+      && (!scenarioFilter || scenarios.includes(scenarioFilter));
+  });
+  list.innerHTML = filtered.length
+    ? filtered.map(({ offence, index }) => renderOffenceFinderListItem(offence, index)).join("")
+    : `<div class="list-row"><p>${offences.length ? "NO OFFENCE FINDINGS MATCH THE CURRENT FILTERS." : "NO OFFENCE FINDINGS\nNo offence has been identified from the current facts and verified legal data."}</p></div>`;
+}
+
+function populateOffenceFinderFilters(offences) {
+  const options = {
+    "#offence-filter-act": new Map(),
+    "#offence-filter-section": new Map(),
+    "#offence-filter-status": new Map(),
+    "#offence-filter-scenario": new Map()
+  };
+  offences.forEach((offence) => {
+    const basis = offence.legalBasis?.[0] || {};
+    const record = legalRecords.find((item) => item.sectionId === basis.sectionId);
+    options["#offence-filter-act"].set(basis.actId, record?.act || basis.actId);
+    options["#offence-filter-section"].set(basis.sectionId, record?.section ? `${record.section} — ${record.title}` : basis.sectionId);
+    options["#offence-filter-status"].set(offence.status, offence.status);
+  });
+  (offenceFinderResult?.scenarios || []).forEach((scenario) => options["#offence-filter-scenario"].set(scenario, formatScenarioName(scenario)));
+  Object.entries(options).forEach(([selector, values]) => {
+    const select = document.querySelector(selector);
+    if (!select) return;
+    const previous = select.value;
+    const label = selector.includes("status") ? "ALL STATUSES" : selector.includes("scenario") ? "ALL SCENARIOS" : selector.includes("section") ? "ALL SECTIONS" : "ALL ACTS";
+    select.innerHTML = `<option value="">${label}</option>${[...values].filter(([value]) => value).map(([value, text]) => `<option value="${escapeHtml(value)}">${escapeHtml(text)}</option>`).join("")}`;
+    if ([...values].some(([value]) => value === previous)) select.value = previous;
+  });
+}
+
+function renderOffenceFinderListItem(offence, index) {
+  const basis = offence.legalBasis?.[0] || {};
+  const record = legalRecords.find((item) => item.sectionId === basis.sectionId);
+  return `<button class="offence-list-item" type="button" data-offence-index="${index}"><span><strong>${escapeHtml(offence.name || "Unnamed offence")}</strong><small>${escapeHtml(record?.act || basis.actId || "NOT AVAILABLE")} / ${escapeHtml(record?.section || basis.sectionId || "NOT AVAILABLE")}</small><small>${escapeHtml(offence.reason || "No explanation available.")}</small></span><span class="status-badge ${statusClass(offence.status)}">${escapeHtml(offence.status || "UNKNOWN")}</span></button>`;
+}
+
+function renderOffenceFinderDetail() {
+  const detail = document.querySelector("#offence-detail");
+  const list = document.querySelector("#offence-list");
+  if (!detail || !list) return;
+  const offences = offenceFinderResult?.assessment?.offences || [];
+  if (selectedOffenceIndex === null || !offences[selectedOffenceIndex]) {
+    detail.hidden = true;
+    list.hidden = false;
+    return;
+  }
+  const offence = offences[selectedOffenceIndex];
+  detail.hidden = false;
+  list.hidden = true;
+  const cards = renderOffenceFinderCard(offence, offenceFinderResult.assessment.evidenceGaps || [], offenceFinderResult.evidence || [], offenceFinderResult);
+  const activeCase = currentCase?.caseId ? currentCase : null;
+  detail.innerHTML = `<div class="offence-detail-header"><div><p class="eyebrow">OFFENCE REVIEW</p><h3>${escapeHtml(offence.name || "Unnamed offence")}</h3></div><button class="secondary-button" type="button" data-offence-action="back">Back to Offence Finder</button></div>${cards}<section class="case-actions-panel"><h4>CASE ACTIONS</h4>${activeCase ? `<button class="secondary-button" type="button" data-offence-action="case-workspace">Open Case Workspace</button><button class="secondary-button" type="button" data-offence-action="evidence">View Evidence Register</button><button class="secondary-button" type="button" data-offence-action="situation">Open Situation Analysis</button>` : "<p>NO ACTIVE CASE</p>"}</section>`;
 }
 
 function renderOffenceFinderResults(assessment, caseResult = {}) {

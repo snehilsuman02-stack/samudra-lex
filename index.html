@@ -370,6 +370,24 @@
             <button class="secondary-button" type="button" data-action="back-dashboard">Back to Dashboard</button>
           </div>
           <div class="module-panel">
+            <div class="offence-finder-intro">
+              <p>Identify and review possible offences based on the current case facts and verified legal data.</p>
+            </div>
+            <div class="module-toolbar offence-finder-toolbar">
+              <label class="search-box">
+                <span>Search Offences</span>
+                <input type="search" id="offence-search" placeholder="Search offence, Act, section or keyword...">
+              </label>
+              <div class="filter-row">
+                <select id="offence-filter-act"><option value="">ALL ACTS</option></select>
+                <select id="offence-filter-section"><option value="">ALL SECTIONS</option></select>
+                <select id="offence-filter-status"><option value="">ALL STATUSES</option></select>
+                <select id="offence-filter-scenario"><option value="">ALL SCENARIOS</option></select>
+                <button class="secondary-button" type="button" id="clear-offence-filters">Clear Filters</button>
+              </div>
+            </div>
+            <div id="offence-list" class="offence-result-list"></div>
+            <div id="offence-detail" class="offence-detail-panel" hidden></div>
             <form id="offence-form" class="stack-form">
               <div class="case-grid">
                 <label>Activity<select id="finder-activity"><option value="">Unknown</option><option value="Fishing">Fishing</option><option value="Transit">Transit</option><option value="Cargo">Cargo</option><option value="Passenger">Passenger</option></select></label>
@@ -383,7 +401,7 @@
                 <button type="submit" class="primary-button">Run offence engine</button>
               </div>
             </form>
-            <div id="offence-results" class="list-panel"></div>
+            <div id="offence-results" class="list-panel" hidden></div>
           </div>
         </section>
 
@@ -504,6 +522,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/app.js?v=27"></script>
+  <script type="module" src="js/app.js?v=28"></script>
 </body>
 </html>

@@ -489,6 +489,19 @@ fieldset legend {
 .summary-not-established { border-left: 4px solid var(--danger) !important; }
 .summary-verification { border-left: 4px solid var(--warning) !important; }
 .offence-result-list { display: grid; gap: 16px; margin-top: 16px; }
+.offence-finder-intro { margin-bottom: 16px; color: var(--muted); }
+.offence-finder-intro p { margin: 0; }
+.offence-list-item { display: flex; align-items: center; justify-content: space-between; gap: 18px; width: 100%; padding: 16px; text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; color: var(--text); }
+.offence-list-item:hover, .offence-list-item:focus-visible { border-color: var(--teal); outline: none; }
+.offence-list-item > span:first-child { display: grid; gap: 6px; }
+.offence-list-item strong { color: var(--navy); }
+.offence-list-item small { color: var(--muted); }
+.offence-detail-panel { margin-top: 18px; }
+.offence-detail-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 16px; }
+.offence-detail-header h3 { margin: 0; color: var(--navy); }
+.case-actions-panel { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 18px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel-alt); }
+.case-actions-panel h4 { width: 100%; margin: 0; color: var(--navy); font-size: 0.78rem; letter-spacing: 0.08em; }
+.case-actions-panel p { margin: 0; color: var(--muted); }
 .offence-result-card { display: grid; gap: 16px; padding: 20px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); box-shadow: 0 8px 20px var(--shadow); }
 .offence-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
 .offence-card-header h4 { margin: 0; color: var(--navy); font-size: 1.05rem; }
@@ -571,4 +584,6 @@ fieldset legend {
   .offence-card-header { display: block; }
   .offence-status { margin-top: 10px; }
   .condition-row { grid-template-columns: 1fr; }
+  .offence-list-item, .offence-detail-header { display: block; }
+  .offence-list-item .status-badge, .offence-detail-header .secondary-button { margin-top: 10px; }
 }
